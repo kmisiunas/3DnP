@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.shape.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="670.0" prefWidth="529.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.misiunas.np.gui.views.DemoController">
+   <children>
+      <Ellipse fill="DODGERBLUE" layoutX="484.0" layoutY="30.0" radiusX="25.0" radiusY="25.0" stroke="BLACK" strokeType="INSIDE" />
+      <Label layoutX="10.0" layoutY="-2.0" text="Demo View">
+         <font>
+            <Font size="26.0" />
+         </font>
+      </Label>
+      <Separator layoutX="10.0" layoutY="162.0" prefHeight="5.0" prefWidth="514.0" />
+      <TextField layoutX="177.0" layoutY="210.0" />
+      <Label layoutX="23.0" layoutY="215.0" text="Text field" />
+      <TextField layoutX="177.0" layoutY="249.0" styleClass="NumFieldFx" />
+      <Label layoutX="23.0" layoutY="254.0" text="Numbers only" />
+      <ToggleButton layoutX="177.0" layoutY="286.0" mnemonicParsing="false" text="ToggleButton" />
+      <Pane layoutX="15.0" layoutY="456.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="500.0">
+         <padding>
+            <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+         </padding>
+         <children>
+            <Button layoutX="109.0" layoutY="42.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="50.0" text="/\" />
+            <Button layoutX="109.0" layoutY="140.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="50.0" text="\\/" />
+            <Button layoutX="60.0" layoutY="92.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="50.0" text="&lt;=" />
+            <Button layoutX="159.0" layoutY="92.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="50.0" text="=&gt;" />
+            <Label layoutX="13.0" layoutY="4.0" text="Position Control" underline="true">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Label>
+            <ProgressBar layoutX="324.0" layoutY="91.0" prefHeight="15.0" prefWidth="120.0" progress="0.0" rotate="-90.0" />
+            <Label layoutX="424.0" layoutY="9.0" text="Z">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Label layoutX="14.0" layoutY="35.0" text="XY">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <TextField layoutX="374.0" layoutY="166.0" prefHeight="26.0" prefWidth="101.0" />
+            <Button layoutX="400.0" layoutY="40.0" maxHeight="-Infinity" minHeight="-Infinity" mnemonicParsing="false" prefWidth="60.0" text="UP" />
+            <Button layoutX="400.0" layoutY="130.0" maxHeight="-Infinity" minHeight="-Infinity" mnemonicParsing="false" prefWidth="60.0" text="DOWN" />
+            <TextField layoutX="184.0" layoutY="29.0" prefHeight="26.0" prefWidth="101.0" />
+            <TextField layoutX="224.0" layoutY="93.0" prefHeight="26.0" prefWidth="101.0" />
+            <Label fx:id="y_current" layoutX="184.0" layoutY="59.0" text="Y: ??.??? um">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            <Label layoutX="226.0" layoutY="126.0" text="X: ??.??? um" fx:id="x_current">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            <Label fx:id="z_current" layoutX="400.0" layoutY="91.0" text="Z: ??.??? um">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+         </children>
+      </Pane>
+      <TextArea fx:id="textOut" layoutX="17.0" layoutY="71.0" prefHeight="83.0" prefWidth="500.0" />
+      <Label layoutX="23.0" layoutY="47.0" text="Debug Feeed">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label layoutX="23.0" layoutY="178.0" text="Testing Other Components">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+   </children>
+</Pane>
