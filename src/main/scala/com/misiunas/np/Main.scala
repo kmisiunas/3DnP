@@ -30,29 +30,31 @@ object Main extends App {
   val system = ActorSystem("3DnP")
 
   println("Initiate Actor for connecting to Piezo Stage")
-  val myActor = system.actorOf(PiezoStage.props(), "piezo")
+  val piezo = system.actorOf(PiezoStage.props(), "piezo")
 
   println("Actor alive")
 
   println("=> ask for status")
   implicit val timeout = Timeout(50 seconds)
-  var reply = myActor ? PiezoStage.StatusQ
+  var reply = piezo ? PiezoStage.StatusQ
   var res = Await.result(reply, timeout.duration).asInstanceOf[PiezoStatus]
   println("<= got results: \n"+ res.pos)
 
-  println("=> move to new loaction: Vec(10,10,10)")
-  myActor ! PiezoStage.Move(Vec(10,10,10))
-
   Wait.stupid(1000)
 
+  println("=> move to new loaction: Vec(10,10,10)")
+  piezo ! PiezoStage.Move(Vec(10,10,10))
+
+  Wait.stupid(4000)
+
   println("=> ask for Position")
-  reply = myActor ? PiezoStage.PositionQ
+  reply = piezo ? PiezoStage.PositionQ
   var pos = Await.result(reply, timeout.duration).asInstanceOf[Vec]
   println("<= got results: \n"+ pos)
 
 
   println("=> ask for status")
-  reply = myActor ? PiezoStage.StatusQ
+  reply = piezo ? PiezoStage.StatusQ
   res = Await.result(reply, timeout.duration).asInstanceOf[PiezoStatus]
   println("<= got results: \n"+ res.pos)
 

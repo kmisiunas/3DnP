@@ -61,7 +61,9 @@ class PiezoStage extends Actor with ActorLogging {
     case _ if !online =>
       log.warning("Piezo Stage still offline at {}", DateTime.now.toString("HH:mm"))
     case "Reset Position" => r = status.pos // just propagating position
-    case s: PiezoStatus if sender == updater => sender ! status
+    case s: PiezoStatus if sender == updater =>
+      status = s
+      log.debug("New piezo status registered: {}", s)
     // control commands
     case Move(v) =>  mover ! move(v)  //todo not sure we want this as forward, could be just tell !
     case MoveBy(dr) => mover ! move(r + dr)
@@ -92,9 +94,8 @@ class PiezoStage extends Actor with ActorLogging {
         Wait.stupid(1000)
         checkForResponse()
       } else if (reply.head.startsWith("Physik Instrumente")){
-        println("Piezo startup response: "+reply.head)
         online = true;
-        log.info("Piezo Stage online on "+DateTime.now.toString)
+        log.info("Piezo Stage online with response: {}", reply.head)
       } else {
         throw new Exception("Unknown response from Piezo Stage via TCP")
       }
@@ -105,13 +106,17 @@ class PiezoStage extends Actor with ActorLogging {
     // Set max motion velocity
     tcp ! TCPTell(
       "VEL 1 {xy} 2 {xy} 3 {z}"
-        .replace("{xy}", config.getDouble("piezo.maxXYSpeed").toString)
-        .replace("{z}",  config.getDouble("piezo.maxZSpeed").toString )
+        .replace("{xy}", config.getDouble("piezo.maxXYSpeed").toFloat.toString )
+        .replace("{z}" , config.getDouble("piezo.maxZSpeed" ).toFloat.toString )
     )
     // make sure everything was received
     Wait.stupid(100)
-    mover ! "wakeup"
     updater ! "wakeup"
+    Wait.stupid(500)
+    mover ! "wakeup"
+    import collection.JavaConversions._
+    val initPos = Vec( ConfigFactory.load.getDoubleList("piezo.initialPosition").toList.map(d => d.toDouble) )
+    //mover ! Move(initPos)
   }
 
   override def preStart() = init()

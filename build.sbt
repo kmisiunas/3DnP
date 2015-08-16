@@ -20,6 +20,8 @@ scalaVersion := "2.11.7"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.11"
 
+libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.3.11"
+
 libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
 
 libraryDependencies += "org.controlsfx" % "controlsfx" % "8.40.9"
@@ -30,3 +32,5 @@ libraryDependencies += "com.typesafe" % "config" % "1.3.0"
 
 // local library
 libraryDependencies += "com.misiunas" % "geoscala_2.11" % "0.2.0"
+
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.3"

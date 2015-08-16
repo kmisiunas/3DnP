@@ -2,9 +2,12 @@ package com.misiunas.np.hardware.stage
 
 import java.io.{BufferedReader, DataOutputStream, InputStreamReader}
 import java.net.Socket
+import java.util.concurrent.TimeoutException
 
-import akka.actor.{Actor, Props}
+import akka.actor.{ReceiveTimeout, Actor, Props}
 import com.typesafe.config.ConfigFactory
+
+import scala.annotation.tailrec
 
 /**
  * Simple TCP command communicator with AKKA
@@ -13,46 +16,75 @@ import com.typesafe.config.ConfigFactory
  */
 class TCPSimple (val socket: Socket) extends Actor with akka.actor.ActorLogging {
 
+  // Variables
+
   import TCPSimple._
 
-  private val tcpReadWait = ConfigFactory.load.getInt("piezo.tcp.readWait")
+  private val maxReadWait = ConfigFactory.load.getInt("piezo.tcp.readMaxWait")
 
-  val inFromServer: BufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
-  val outToServer: DataOutputStream =  new DataOutputStream(socket.getOutputStream())
+  private var inputStream: InputStreamReader = null
+  private var inFromServer: BufferedReader = null // Java like, but robust(ish)
+  private var outToServer: DataOutputStream =  null
+
+
+  // AKKA Actor
+
+  override def preStart(): Unit = {
+    inputStream = new InputStreamReader(socket.getInputStream())
+    inFromServer = new BufferedReader(inputStream)
+    outToServer = new DataOutputStream(socket.getOutputStream())
+    log.info("Opened connections to Piezo Stage via TCP")
+  }
+
+  override def postStop(): Unit = { // be clean
+    inFromServer.close()
+    inputStream.close()
+    outToServer.close()
+    log.info("Closed connections to Piezo Stage via TCP")
+  }
+
+  // Lets do some actual work!
+
+  /** send message */
+  private def send(msg: String): Unit = outToServer.writeBytes(msg + '\n')
+
+  /** clear buffer for new messgaes */
+  @tailrec
+  private def clearBuffer(): Unit = if( inFromServer.ready() ) { inFromServer.read(); clearBuffer() }
+
+  /** attempts to read specified number of lines or times out */
+  private def read(lines: Int): List[String] = {
+    val deadline = System.currentTimeMillis() + maxReadWait
+    /** recursively read by bite and store results*/
+    @tailrec
+    def buildString(current: String = ""): String = {
+      if(inFromServer.ready())
+        buildString(current + inFromServer.read().toChar) // read as fast as it can!!!
+      else if(current.count(_=='\n') == lines)
+        current
+      else if(deadline < System.currentTimeMillis())
+          throw new Exception("Timeout while waiting for "+ lines +" response(s) from TCP connection. So far got: '"+current+"'You could increase 'piezo.tcp.readMaxWait'?")
+      else
+        buildString(current)
+    }
+    buildString().lines.toList.map(_.trim)
+  }
 
   override def receive: Receive = {
     case TCPTell(tell) =>
       try {
-        outToServer.writeBytes(tell + '\n')
+        send(tell)
       } catch {
-        case e: Exception =>
-          log.error(e, "TCPTell failed")
-          sender ! TCPError(e.toString)
+        case e: Exception => log.error(e, "failed sending command: "+tell)
       }
-
-    case TCPAsk(tell) =>
+    case TCPAsk(ask, lines) =>
       try {
-        //inFromServer.reset() //dont get confused with old messages
-        outToServer.writeBytes(tell + '\n')
-        stupidWait(tcpReadWait)
-        sender ! TCPReply( read() )
+        clearBuffer()  // just in case there were leftovers from somewhere
+        send(ask)
+        sender ! TCPReply( read(lines) )
       } catch {
-        case e: Exception =>
-          log.error(e, "TCPAsk failed")
-          sender ! TCPError(e.toString)
+        case e: Exception => log.error(e, "failed asking command: "+ask)
       }
-  }
-
-  private def read(): List[String] = {
-    if (inFromServer.ready())
-      inFromServer.readLine() :: read()
-    else
-      Nil
-  }
-
-  def stupidWait(ms: Int) = {
-    val t0 = System.currentTimeMillis()
-    while (t0 + ms >= System.currentTimeMillis()){}
   }
 
 }
@@ -68,8 +100,9 @@ object TCPSimple {
 
   // communication
 
-  case class TCPReply(reply: List[String])
-  case class TCPAsk(question: String)
+  case class TCPAsk(question: String, lines: Int = 1)
   case class TCPTell(tell: String)
-  case class TCPError(st: String)
+  case class TCPReply(reply: List[String])
+
+  //case class TCPError(st: String) // not used?
 }

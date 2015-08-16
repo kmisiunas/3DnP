@@ -10,6 +10,7 @@ import com.misiunas.np.tools.Wait
 import com.typesafe.config.ConfigFactory
 
 import scala.annotation.tailrec
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
@@ -32,7 +33,7 @@ protected class MoverWorker (val tcp: ActorRef) extends Actor with ActorLogging 
       waitUntilLastJobFinished()
       if (isWithinRange(r))
         tcp ! TCPTell("MOV 1 " + r.x.toFloat + " 2 "+ r.y.toFloat + " 3 " + r.z.toFloat  )
-      else {
+      else {  // todo fix this
         sender ! "Error: position (" + r.x + ", " + r.y + ", " + r.z + ") is outside the bounds. skipping."
         context.parent ! "Reset Position"
         log.error("Error: position (" + r.x + ", " + r.y + ", " + r.z + ") is outside the bounds. skipping.")
@@ -43,22 +44,11 @@ protected class MoverWorker (val tcp: ActorRef) extends Actor with ActorLogging 
   /** waits until last job is finished */
   @tailrec
   private def waitUntilLastJobFinished(): Unit = {
-    //implicit val timeout = Timeout(1 seconds)
-    //val positionFuture = tcp ? TCPAsk("POS?")
-    //val positionReply = Await.result(positionFuture, timeout.duration).asInstanceOf[TCPReply].reply
-
-    implicit val timeout = Timeout(5 seconds)
-    val isMoving = tcp ? TCPAsk("?")
-    if(isMoving.isCompleted){
-      val response = isMoving.mapTo[TCPReply].value.get.get.reply.head
-      if( !response.startsWith("0") ){
-        Wait.stupid(5)
-        waitUntilLastJobFinished()
-      }
-    } else {
-      Wait.stupid(5)
-      waitUntilLastJobFinished()
-    }
+    implicit val timeout = Timeout(1 seconds)
+    val isMovingFuture = tcp ? TCPAsk("" + 5.toChar)
+    val isMovingReply = Await.result(isMovingFuture, timeout.duration).asInstanceOf[TCPReply].reply
+    val isMoving = if (isMovingReply.head.trim == "0") false else true
+    if(isMoving) waitUntilLastJobFinished()
   }
 
   def isWithinRange(r: Vec): Boolean =
