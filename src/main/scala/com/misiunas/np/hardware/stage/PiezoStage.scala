@@ -116,7 +116,7 @@ class PiezoStage extends Actor with ActorLogging {
     mover ! "wakeup"
     import collection.JavaConversions._
     val initPos = Vec( ConfigFactory.load.getDoubleList("piezo.initialPosition").toList.map(d => d.toDouble) )
-    //mover ! Move(initPos)
+    mover ! Move(initPos)
   }
 
   override def preStart() = init()
