@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.misiunas.geoscala.vectors.Vec
 import com.misiunas.np.gui.DemoJavaFXApp
-import com.misiunas.np.hardware.adc.input.TCPStreamReader
+import com.misiunas.np.hardware.adc.input.{IV, TCPStreamReader}
 import com.misiunas.np.hardware.adc.input.test.TestTCP
 import com.misiunas.np.hardware.stage.{TCPSimple, PiezoStatus, PiezoStage}
 import com.misiunas.np.hardware.stage.TCPSimple.{TCPReply, TCPAsk}
@@ -62,6 +62,8 @@ object Main extends App {
   reply = piezo ? PiezoStage.StatusQ
   res = Await.result(reply, timeout.duration).asInstanceOf[PiezoStatus]
   println("<= got results: \n"+ res.pos)
+
+  val vi = system.actorOf( IV.props(), "vi")
 
   println("shutting down")
   system.shutdown()

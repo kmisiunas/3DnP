@@ -34,3 +34,5 @@ libraryDependencies += "com.typesafe" % "config" % "1.3.0"
 libraryDependencies += "com.misiunas" % "geoscala_2.11" % "0.2.0"
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.3"
+
+libraryDependencies += "com.typesafe.play" %% "play-json" % "2.4.2"
