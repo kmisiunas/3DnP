@@ -3,6 +3,8 @@ package com.misiunas.np.hardware.stage
 import java.io.{BufferedReader, DataOutputStream}
 import java.net.Socket
 
+import breeze.io.TextReader.InputStreamReader
+
 /**
  * Created by kmisiunas on 15-08-15.
  */

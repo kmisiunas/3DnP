@@ -1,9 +1,7 @@
-package com.misiunas.np.gui.views
+package com.misiunas.np.gui.test
 
 import javafx.fxml.FXML
 import javafx.scene.control.TextArea
-
-import com.misiunas.np.gui.DemoJavaFXApp
 ;
 
 /**

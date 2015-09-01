@@ -1,4 +1,4 @@
-package com.misiunas.np.gui
+package com.misiunas.np.gui.test
 
 import javafx.application.Application
 import javafx.beans.property.{SimpleStringProperty, StringProperty}
@@ -9,7 +9,7 @@ import javafx.scene.image.Image
 import javafx.scene.layout.Pane
 import javafx.stage.Stage
 
-import com.misiunas.np.gui.views.DemoController
+import com.misiunas.np.gui.test.DemoController
 
 /**
  * Created by kmisiunas on 15-08-15.
@@ -31,7 +31,7 @@ class DemoJavaFXApp extends Application {
 
     // Load root layout from fxml file.
     var loader = new FXMLLoader();
-    loader.setLocation(getClass.getResource("/com/misiunas/np/gui/views/Demo.fxml"));
+    loader.setLocation(getClass.getResource("/com/misiunas/np/gui/views/test/Demo.fxml"));
     var rootLayout = loader.load.asInstanceOf[Pane]
     textOut = rootLayout.lookup("#textOut").asInstanceOf[TextArea]
     textOut.setText("early")

@@ -1,7 +1,6 @@
-package com.misiunas.np.hardware.adc.input.test
+package com.misiunas.np.hardware.adc
 
-import akka.actor.{Props, ActorRef, Actor}
-import breeze.numerics.log
+import akka.actor.{Actor, Props}
 import com.misiunas.np.hardware.adc.input.TCPStreamReader
 
 /**

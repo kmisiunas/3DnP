@@ -1,4 +1,4 @@
-package com.misiunas.np.gui.views;
+package com.misiunas.np.gui.test;
 
 import javafx.event.EventHandler;
 import javafx.scene.control.TextField;
