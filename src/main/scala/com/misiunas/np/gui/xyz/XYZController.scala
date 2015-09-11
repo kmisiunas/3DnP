@@ -59,7 +59,14 @@ class XYZController {
   @FXML private var yPosField: TextField = null
   @FXML private var zPosField: TextField = null
 
-
+  def setFieldPos(vector: Vec): Unit = {
+    if( !xPosField.isFocused && !yPosField.isFocused && !zPosField.isFocused ) {
+      xPosField.setText("" + vector.x)
+      yPosField.setText("" + vector.y)
+      zPosField.setText("" + vector.z)
+      // hope it does not tiger event listener!
+    }
+  }
 
   @FXML protected def xPosAction(event: ActionEvent) = {
     // should I test event type?

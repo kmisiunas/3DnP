@@ -4,8 +4,9 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.misiunas.geoscala.vectors.Vec
+import com.misiunas.np.hardware.TCPSimple
 import com.misiunas.np.hardware.stage.PiezoStage.{Move, Stop}
-import com.misiunas.np.hardware.stage.TCPSimple._
+import TCPSimple._
 import com.misiunas.np.tools.Wait
 import com.typesafe.config.ConfigFactory
 
@@ -30,7 +31,6 @@ protected class MoverWorker (val tcp: ActorRef) extends Actor with ActorLogging 
   override def receive: Receive = {
     case "awake" => {}
     case Move(r) =>
-      waitUntilLastJobFinished()
       if (isWithinRange(r))
         tcp ! TCPTell("MOV 1 " + r.x.toFloat + " 2 "+ r.y.toFloat + " 3 " + r.z.toFloat  )
       else {  // todo fix this
@@ -38,6 +38,8 @@ protected class MoverWorker (val tcp: ActorRef) extends Actor with ActorLogging 
         context.parent ! "Reset Position"
         log.error("Error: position (" + r.x + ", " + r.y + ", " + r.z + ") is outside the bounds. skipping.")
       }
+      waitUntilLastJobFinished()
+      sender ! "ok"
     // need to handle TCP failures?
   }
 

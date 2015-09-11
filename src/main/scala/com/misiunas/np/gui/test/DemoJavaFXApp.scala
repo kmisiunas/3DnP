@@ -31,7 +31,7 @@ class DemoJavaFXApp extends Application {
 
     // Load root layout from fxml file.
     var loader = new FXMLLoader();
-    loader.setLocation(getClass.getResource("/com/misiunas/np/gui/views/test/Demo.fxml"));
+    loader.setLocation(getClass.getResource("/com/misiunas/np/gui/test/Demo.fxml"));
     var rootLayout = loader.load.asInstanceOf[Pane]
     textOut = rootLayout.lookup("#textOut").asInstanceOf[TextArea]
     textOut.setText("early")

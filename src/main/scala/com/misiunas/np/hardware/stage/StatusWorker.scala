@@ -5,6 +5,7 @@ import akka.util.Timeout
 import akka.pattern.ask
 import breeze.numerics.log
 import com.misiunas.geoscala.vectors.Vec
+import com.misiunas.np.hardware.TCPSimple
 import org.joda.time.DateTime
 import scala.concurrent.Await
 
@@ -29,7 +30,7 @@ protected class StatusWorker (val tcp: ActorRef) extends Actor with ActorLogging
   def receive = {
     case "awake" => {log.debug("awake command initiated - no action taken")}
     case "tick" =>
-      log.debug("Received a 'tick'")
+      //log.debug("Received a 'tick'")
       // ask stage about this
       getPiezoStatus() match {
         case Some(status) => context.parent ! status

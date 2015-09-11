@@ -36,3 +36,6 @@ libraryDependencies += "com.misiunas" % "geoscala_2.11" % "0.2.0"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.3"
 
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.4.2"
+
+// some cool font-icons: http://www.jensd.de/wordpress/?p=733 and http://www.jensd.de/wordpress/?p=692
+libraryDependencies += "de.jensd" % "fontawesomefx" % "8.6"

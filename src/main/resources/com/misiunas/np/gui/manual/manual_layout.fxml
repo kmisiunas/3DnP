@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.misiunas.np.gui.manual.ManualController">
+   <children>
+      <AnchorPane prefHeight="50.0">
+         <children>
+            <Label layoutX="14.0" layoutY="11.0" text="Manual Controls">
+               <font>
+                  <Font size="24.0" />
+               </font>
+            </Label>
+            <ProgressIndicator fx:id="progressIndicator" focusTraversable="false" layoutX="740.0" layoutY="1.0" prefHeight="40.0" prefWidth="40.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="4.0" />
+         </children>
+      </AnchorPane>
+      <Separator prefWidth="200.0" />
+      <Button fx:id="approachSurfaceButton" mnemonicParsing="false" onAction="#approachSurfaceAction" text="Approach Surface">
+         <VBox.margin>
+            <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+         </VBox.margin>
+      </Button>
+   </children>
+</VBox>

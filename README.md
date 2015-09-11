@@ -2,9 +2,9 @@
 
 ## ToDo
 
- - [ ] Safe TCP connection handling and automatic re-connection
  - [ ] TCP DAC communication
  - [ ] JAVAFX GUI
+ - [ ] Safe TCP connection handling and automatic re-connection
  - [ ] Think of modular control structure. Needs to be flexible to allow dynamic swap of algorithms
  - [ ] Need current stabilisation/nulling algorithm: electrical drift + evaporation compensation
  - [ ] Hopping mode imaging

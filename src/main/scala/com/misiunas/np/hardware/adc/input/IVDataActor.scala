@@ -63,7 +63,7 @@ class IVDataActor extends Actor with ActorLogging {
       val dtSmall = (json \ "U_raw" \ "dt").as[Double]
       // prepare results
       sequenceChecker(n)
-      RawDataContainer(t, dt, ac_I, ac_V, dc_I, dc_V, phase, raw_I, raw_V )
+      RawDataContainer(t, dt, ac_I, ac_V, dc_I, dc_V, phase, raw_I, raw_V , n)
     } catch {
       case e: Exception =>
         log.error(e, "TCP IV received information could not be praised using JSON");
@@ -100,7 +100,8 @@ object IVDataActor {
                                val dc_V: Double,
                                val phase: Double, // phase difference between I anv V in ac
                                val raw_I: Vector[Double],
-                               val raw_V: Vector[Double]
+                               val raw_V: Vector[Double],
+                               val cycle: Int
                                )
 
 

@@ -20,7 +20,7 @@ class IV extends Actor with ActorLogging {
 
   var dataRaw: IVDataRaw = IVDataRaw( DateTime.now(), 0, Vector[Double](), Vector[Double]())
 
-  var data: IVData = IVData( DateTime.now(), 0 , Vector[Double](), Vector[Double](), Vector[Double](), Vector[Double](), Vector[Double]() )
+  var data: IVData = IVData( DateTime.now(), 0 , Vector[Double](), Vector[Double](), Vector[Double](), Vector[Double](), Vector[Double](), -1 )
 
   override def receive: Receive = {
     case Get(n) => sender ! data
@@ -40,7 +40,8 @@ class IV extends Actor with ActorLogging {
       in.ac_V  +: data.ac_V.take(bufferSize-1),
       in.dc_I  +: data.dc_I.take(bufferSize-1),
       in.dc_V  +: data.dc_V.take(bufferSize-1),
-      in.phase +: data.phase.take(bufferSize-1)
+      in.phase +: data.phase.take(bufferSize-1),
+      in.cycle
     )
   }
 
@@ -72,7 +73,7 @@ object IV {
   case class IVData( val t: DateTime, val dt: Double,
                      val ac_I: Vector[Double], val ac_V: Vector[Double],
                      val dc_I: Vector[Double], val dc_V: Vector[Double],
-                     val phase: Vector[Double] )
+                     val phase: Vector[Double], val cycle: Int)
 
 
 }

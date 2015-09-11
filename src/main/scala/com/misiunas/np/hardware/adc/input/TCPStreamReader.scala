@@ -4,8 +4,8 @@ import java.io.{BufferedReader, DataOutputStream, InputStreamReader}
 import java.net.Socket
 
 import akka.actor.{Actor, Props}
-import com.misiunas.np.hardware.stage.TCPSimple
-import com.misiunas.np.hardware.stage.TCPSimple.{TCPAsk, TCPReply}
+import com.misiunas.np.hardware.TCPSimple
+import TCPSimple.{TCPAsk, TCPReply}
 import com.typesafe.config.ConfigFactory
 
 import scala.annotation.tailrec
@@ -20,7 +20,7 @@ import scala.annotation.tailrec
  *
  * Created by kmisiunas on 15-08-02.
  */
-class TCPStreamReader (val socket: Socket) extends Actor with akka.actor.ActorLogging {
+class TCPStreamReader extends Actor with akka.actor.ActorLogging {
 
   // Variables
 
@@ -40,10 +40,13 @@ class TCPStreamReader (val socket: Socket) extends Actor with akka.actor.ActorLo
   // AKKA Actor
 
   override def preStart(): Unit = {
+    val conf = ConfigFactory.load
+    val socket = new Socket(conf.getString("adc.input.tcp.ip"), conf.getInt("adc.input.tcp.port"))
     inputStream = new InputStreamReader(socket.getInputStream())
     inFromServer = new BufferedReader(inputStream)
     log.info("Opened incoming ADC data connection via TCP")
-    system.scheduler.scheduleOnce(10 millis, self, "tick")
+    //system.scheduler.scheduleOnce(10 millis, self, "tick")
+    system.scheduler.schedule(10 millis, 5 millis, self, "tick")
   }
 
   override def postStop(): Unit = { // be clean
@@ -65,13 +68,13 @@ class TCPStreamReader (val socket: Socket) extends Actor with akka.actor.ActorLo
 
   override def receive: Receive = {
     case "tick" =>
-      log.debug("<tick>")
+      //log.debug("<tick>")
       try {
         if(inFromServer.ready()) context.parent ! readLine()
-        system.scheduler.scheduleOnce(5 millis, self, "tick")
       } catch {
         case e: Exception => log.error(e, "Failed receiving ADC data via TCP")
       }
+      //system.scheduler.scheduleOnce(5 millis, self, "tick")
   }
 
 }
@@ -79,11 +82,6 @@ class TCPStreamReader (val socket: Socket) extends Actor with akka.actor.ActorLo
 
 object TCPStreamReader {
 
-  def props(): Props = {
-    val conf = ConfigFactory.load
-    val socket = new Socket(conf.getString("adc.input.tcp.ip"), conf.getInt("adc.input.tcp.port"))
-    Props(new TCPStreamReader(socket) )
-  }
-
+  def props(): Props = Props(new TCPStreamReader() )
 
 }
