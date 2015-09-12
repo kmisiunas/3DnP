@@ -6,7 +6,7 @@ import akka.util.Timeout
 import com.misiunas.geoscala.vectors.Vec
 import com.misiunas.np.hardware.TCPSimple
 import TCPSimple.{TCPReply, TCPAsk, TCPTell}
-import com.misiunas.np.tools.Wait
+import com.misiunas.np.tools.{Talkative, Wait}
 import com.typesafe.config.ConfigFactory
 import org.joda.time.DateTime
 import akka.pattern.ask
@@ -55,7 +55,6 @@ class PiezoStage extends Actor with ActorLogging {
 
   import PiezoStage._
 
-
   // akka actors
   override def receive: Receive = {
     // special commands first
@@ -82,6 +81,8 @@ class PiezoStage extends Actor with ActorLogging {
     Move(r)
   }
 
+  override def preStart() = init()
+
   /** initialise the stage */
   def init(): Unit = {
     val config = ConfigFactory.load
@@ -97,6 +98,10 @@ class PiezoStage extends Actor with ActorLogging {
       } else if (reply.head.startsWith("Physik Instrumente")){
         online = true;
         log.info("Piezo Stage online with response: {}", reply.head)
+        // report time it took to go online
+        val t0 = System.currentTimeMillis()
+        Talkative.getResponse(tcp, TCPAsk("*IDN?")) // don't care about result
+        log.info("Piezo Stage ping time: "+ (System.currentTimeMillis()-t0) +" ms")
       } else {
         throw new Exception("Unknown response from Piezo Stage via TCP")
       }
@@ -120,9 +125,8 @@ class PiezoStage extends Actor with ActorLogging {
     mover ! Move(initPos)
   }
 
-  override def preStart() = init()
-
 }
+
 
 object PiezoStage {
 

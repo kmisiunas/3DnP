@@ -1,6 +1,9 @@
 package com.misiunas.np.gui.manual
 
+import javafx.application.Platform
+
 import akka.actor.{Props, ActorRef, ActorLogging, Actor}
+import com.misiunas.np.essential.Processor
 
 /**
  * # Manual control over the procedures
@@ -10,18 +13,22 @@ import akka.actor.{Props, ActorRef, ActorLogging, Actor}
 class ManualView (val processor: ActorRef,
                   val manualController: ManualController  ) extends Actor with ActorLogging {
 
+  import context._
+  implicit def funToRunnable(fun: () => Unit) = new Runnable() { def run() = fun() }
+
   override def preStart() = {
     // ensure 'hack-glue' between javaFX and Akka is there
     manualController.setActor( self )
-    // run regular updates
-    //system.scheduler.scheduleOnce(1000/updateFPS millis, self, "tick")
   }
 
   override def receive: Receive = {
-    case p: com.misiunas.np.essential.Process[Any] =>
-      log.info("Manual control sent a process for processor: "+p)
+    case p: com.misiunas.np.essential.DeviceProcess[Any] =>
+      log.info("ManualControl GUI sent a job to the processor: "+p)
       processor ! p
-    case _ => log.warning("Message not understood")
+    case Processor.Kill => processor ! Processor.Kill
+    case Processor.Status(working) =>
+      Platform.runLater(() => manualController.setProcessorStatus(working) )
+    case msg => log.warning("Message not understood: "+msg)
   }
 
 }

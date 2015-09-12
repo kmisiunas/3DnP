@@ -1,15 +1,11 @@
-package com.misiunas.np.essential
+package com.misiunas.np.essential.processes
 
-import java.net.Socket
-
-import akka.actor.ActorRef
-import breeze.linalg.*
 import com.misiunas.geoscala.vectors.Vec
+import com.misiunas.np.essential.{ACDC, Amplifier, DeviceProcess}
 import com.misiunas.np.hardware.stage.PiezoStage
 import com.misiunas.np.hardware.stage.PiezoStage.MoveBy
 import com.misiunas.np.tools.Talkative
 import com.typesafe.config.ConfigFactory
-import org.joda.time.DateTime
 
 import scala.annotation.tailrec
 
@@ -26,7 +22,7 @@ import scala.annotation.tailrec
 class Approach private ( val baselineFn: Amplifier => ACDC,
                          val target: Double, // expressed in percent
                          val speed: Double  // step size of
-                         ) extends Process[Vec] {
+                         ) extends DeviceProcess[Vec] {
 
   val log = org.slf4j.LoggerFactory.getLogger(getClass.getName)
 
@@ -121,6 +117,11 @@ object Approach {
       speed = R/4
        // safe side
     )
+  }
+
+  def apply(target: Double, speed: Double): Approach = {
+    val fn: Amplifier => ACDC = a => {a.wait(10); a.getMean(10)}
+    new Approach(fn, target, speed )
   }
 
 

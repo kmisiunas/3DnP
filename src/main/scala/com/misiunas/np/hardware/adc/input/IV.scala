@@ -51,7 +51,7 @@ class IV extends Actor with ActorLogging {
     //if ( (in.t to data.t).millis > 1000 )
     //  log.warning("there was no IV update for more than a second")
     if (in.dt != data.dt)
-      log.warning("Change in sampling rate from "+in.dt+" to "+data.dt)
+      log.warning("Change in sampling rate from "+data.dt+" to "+in.dt +" ms")
   }
 
 }

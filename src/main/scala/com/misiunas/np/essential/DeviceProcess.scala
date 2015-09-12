@@ -10,7 +10,7 @@ import com.misiunas.np.hardware.stage.PiezoStage
  *
  * Created by kmisiunas on 15-09-04.
  */
-trait Process[A] {
+trait DeviceProcess[A] {
 
   /** method to be implemented to determine a process */
   protected def process: Option[A]

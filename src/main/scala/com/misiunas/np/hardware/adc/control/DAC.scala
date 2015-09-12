@@ -15,7 +15,7 @@ class DAC extends Actor with ActorLogging{
   protected val tcp = context.actorOf(TCPSimple.propsForADCControls() ,"tcp")
   protected val worker = context.actorOf(DACWorker.props(tcp), "worker")
 
-  var status: DACStatus = DACStatus( 0, 0, ac_frequency = 50, false, ImagingElectrode )
+  var status: DACStatus = DACStatus( 0, 0, ac_frequency = 50, false, DAC.ImagingElectrode )
   
   override def preStart() = self ! SetStatus(status) // reset DAC
 
@@ -96,6 +96,11 @@ object DAC {
   case class SetFrequency(frequency: Double)
   case class SetMode(electrode: ElectrodeMode)
   case class Pulse(amount: Double)
+
+  abstract class ElectrodeMode
+
+  case object ImagingElectrode extends ElectrodeMode
+  case object DepositionElectrode extends ElectrodeMode
 
   // initialisation
 

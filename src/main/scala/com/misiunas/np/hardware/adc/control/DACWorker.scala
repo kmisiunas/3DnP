@@ -17,6 +17,7 @@ import scala.concurrent.{Await, Future}
  */
 class DACWorker (tcp: ActorRef) extends Actor with ActorLogging {
 
+  import DAC._
 
   override def receive: Receive = {
     case SetDC_V(v) =>
