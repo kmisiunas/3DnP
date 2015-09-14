@@ -6,6 +6,7 @@ import akka.pattern.ask
 import breeze.numerics.log
 import com.misiunas.geoscala.vectors.Vec
 import com.misiunas.np.hardware.TCPSimple
+import com.misiunas.np.hardware.stage.PiezoStage.PiezoStatus
 import org.joda.time.DateTime
 import scala.concurrent.Await
 

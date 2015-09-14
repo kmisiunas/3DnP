@@ -4,7 +4,8 @@ import javafx.application.Platform
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.misiunas.geoscala.vectors.Vec
-import com.misiunas.np.hardware.stage.{PiezoStage, PiezoStatus}
+import com.misiunas.np.hardware.stage.PiezoStage.PiezoStatus
+import com.misiunas.np.hardware.stage.{PiezoStage}
 
 import scala.concurrent.duration._
 

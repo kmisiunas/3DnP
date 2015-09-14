@@ -15,6 +15,7 @@ import com.misiunas.np.gui.manual.{ManualView, ManualController}
 import com.misiunas.np.gui.xyz.{XYZView, XYZController}
 import com.misiunas.np.hardware.adc.control.DAC
 import com.misiunas.np.hardware.adc.input.IV
+import com.misiunas.np.hardware.logging.MotionLogger
 import com.misiunas.np.hardware.stage.PiezoStage
 
 /**
@@ -30,6 +31,7 @@ class ApplicationFX extends Application {
   val xyz = system.actorOf(PiezoStage.props(), "piezo")
   val iv = system.actorOf(IV.props(), "iv")
   val control = system.actorOf(DAC.props(), "dac")
+  val motionLogger = system.actorOf(MotionLogger.props(iv, xyz), "logger.motion")
   val processor = system.actorOf(Processor.props(xyz,iv,control), "processor")
 
 

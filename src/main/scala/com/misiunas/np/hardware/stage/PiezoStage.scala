@@ -1,11 +1,13 @@
 package com.misiunas.np.hardware.stage
 
 import akka.actor.SupervisorStrategy.Restart
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{ActorRef, Actor, ActorLogging, Props}
 import akka.util.Timeout
 import com.misiunas.geoscala.vectors.Vec
 import com.misiunas.np.hardware.TCPSimple
 import TCPSimple.{TCPReply, TCPAsk, TCPTell}
+import com.misiunas.np.hardware.logging.MotionLogger
+import com.misiunas.np.hardware.stage.PiezoStage.PiezoStatus
 import com.misiunas.np.tools.{Talkative, Wait}
 import com.typesafe.config.ConfigFactory
 import org.joda.time.DateTime
@@ -65,8 +67,12 @@ class PiezoStage extends Actor with ActorLogging {
       status = s
       log.debug("New piezo status registered: {}", s)
     // control commands
-    case Move(v) =>  mover forward move(v)  //todo not sure we want this as forward, could be just tell !
-    case MoveBy(dr) => mover forward move(r + dr)
+    case Move(v) =>
+      mover forward move(v)  //todo not sure we want this as forward, could be just tell !
+      registerMotion()
+    case MoveBy(dr) =>
+      mover forward move(r + dr)
+      registerMotion()
     case Stop =>
       tcp ! TCPTell("STP")
       mover ! Restart // todo: if it has a job in process - what happens?
@@ -125,6 +131,13 @@ class PiezoStage extends Actor with ActorLogging {
     mover ! Move(initPos)
   }
 
+  // # Logger
+
+  /** attempt to log motion */
+  def registerMotion() = {
+    context.actorSelection("/user/logger.motion") ! MotionLogger.Log
+  }
+
 }
 
 
@@ -144,5 +157,8 @@ object PiezoStage {
   case object PositionQ
   case object StatusQ
 
+  case class PiezoStatus ( lastUpdate: DateTime,
+                           pos: Vec,
+                           moving: Boolean )
 
 }

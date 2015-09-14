@@ -1,7 +1,6 @@
-package com.misiunas.np.hardware.adc.input
+package com.misiunas.np.hardware.logging
 
 import akka.actor.Actor
-import akka.actor.Actor.Receive
 
 /**
  * Created by kmisiunas on 15-08-27.

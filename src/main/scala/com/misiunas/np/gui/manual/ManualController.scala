@@ -47,7 +47,8 @@ class ManualController extends Initializable {
   @FXML protected def findAndFollowSurfaceAction(event: ActionEvent) =
     sendToActor( KeepDistance(
       distanceFraction = approachDistanceField.getText.toDouble,
-      approachSpeed = approachSpeedField.getText.toDouble
+      approachSpeed = approachSpeedField.getText.toDouble,
+      baselineCheckInterval = conductivityCheckIntervalField.getText.toDouble
     ))
 
   @FXML protected def setStandardDACSettingsAction(event: ActionEvent) =
