@@ -54,7 +54,7 @@ protected class XYZView (val piezo: ActorRef,
       })
 
     case move: PiezoStage.Move => piezo ! move
-
+    case move: PiezoStage.MoveBy => piezo ! move
   }
 
 

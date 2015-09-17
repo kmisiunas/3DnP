@@ -8,7 +8,13 @@
  - [X] Think of modular control structure. Needs to be flexible to allow dynamic swap of algorithms
  - [ ] Need current stabilisation/nulling algorithm: electrical drift + evaporation compensation
  - [ ] Hopping mode imaging
- - [ ] Processor with ability to kill Process 
+ - [X] Processor with ability to kill Process 
+ 
+ ## Guidelines
+ 
+ ### GUI
+ 
+  - Window width up to 700px
 
 
 ### Logs

@@ -3,7 +3,7 @@ package com.misiunas.np.gui.manual
 import javafx.application.Platform
 
 import akka.actor.{Props, ActorRef, ActorLogging, Actor}
-import com.misiunas.np.essential.Processor
+import com.misiunas.np.essential.{DeviceProcess, Processor}
 
 /**
  * # Manual control over the procedures
@@ -22,9 +22,7 @@ class ManualView (val processor: ActorRef,
   }
 
   override def receive: Receive = {
-    case p: com.misiunas.np.essential.DeviceProcess[Any] =>
-      log.info("ManualControl GUI sent a job to the processor: "+p)
-      processor ! p
+    case p: DeviceProcess => processor ! p
     case Processor.Kill => processor ! Processor.Kill
     case Processor.Status(working) =>
       Platform.runLater(() => manualController.setProcessorStatus(working) )

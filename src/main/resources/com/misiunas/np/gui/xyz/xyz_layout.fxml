@@ -16,6 +16,8 @@
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="30.0" />
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="26.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
         </columnConstraints>
         <rowConstraints>
           <RowConstraints vgrow="SOMETIMES" />
@@ -35,10 +37,18 @@
             <TextField onAction="#xPosAction" text="0.0" GridPane.columnIndex="4" fx:id="xPosField" />
             <TextField fx:id="yPosField" onAction="#yPosAction" text="0.0" GridPane.columnIndex="4" GridPane.rowIndex="1" />
             <TextField fx:id="zPosField" onAction="#zPosAction" text="0.0" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+            <Button mnemonicParsing="false" onAction="#actionStepDownX" prefHeight="26.0" prefWidth="26.0" text="-" GridPane.columnIndex="5" />
+            <Button mnemonicParsing="false" onAction="#actionStepUpX" prefHeight="26.0" prefWidth="26.0" text="+" GridPane.columnIndex="6" />
+            <Button mnemonicParsing="false" onAction="#actionStepDownY" prefHeight="26.0" prefWidth="26.0" text="-" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+            <Button mnemonicParsing="false" onAction="#actionStepDownZ" prefHeight="26.0" prefWidth="26.0" text="-" GridPane.columnIndex="5" GridPane.rowIndex="2" />
+            <Button mnemonicParsing="false" onAction="#actionStepUpY" prefHeight="26.0" prefWidth="26.0" text="+" GridPane.columnIndex="6" GridPane.rowIndex="1" />
+            <Button mnemonicParsing="false" onAction="#actionStepUpZ" prefHeight="26.0" prefWidth="26.0" text="+" GridPane.columnIndex="6" GridPane.rowIndex="2" />
          </children>
          <padding>
             <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
          </padding>
       </GridPane>
+      <TextField fx:id="stepSizeField" layoutX="492.0" layoutY="20.0" prefWidth="100.0" text="0.005" />
+      <Label layoutX="397.0" layoutY="25.0" text="Step Size (um)" />
    </children>
 </Pane>

@@ -10,6 +10,11 @@ import com.typesafe.config.ConfigFactory
 import org.joda.time.DateTime
 
 /**
+ * # Class for storing raw data from the ADC
+ *
+ * ToDo:
+ *  - Use buffered contained for storing elements and only send requested amounts around.
+ *
  * Created by kmisiunas on 15-08-27.
  */
 class IV extends Actor with ActorLogging {

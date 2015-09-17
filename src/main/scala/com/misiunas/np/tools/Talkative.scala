@@ -14,7 +14,7 @@ import akka.pattern.{ ask, pipe }
 object Talkative {
 
   import scala.concurrent.duration._
-  implicit val timeout = Timeout(5 seconds)
+  implicit val timeout = Timeout(10 seconds)
 
   /** waits until the response is generated (locks the thread) */
   def getResponse[T](actor: ActorRef, message: Any): T = Await.result(actor ? message, timeout.duration).asInstanceOf[T]

@@ -81,24 +81,28 @@
                               <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
                            </GridPane.margin>
                         </TextField>
-                        <Label text="Log motion and IV to file" GridPane.rowIndex="3">
+                        <Label text="Pulse size (" GridPane.rowIndex="4">
                            <GridPane.margin>
                               <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                            </GridPane.margin>
                         </Label>
-                        <Label text="Use AC " GridPane.rowIndex="4">
+                        <Label text="Use AC " GridPane.rowIndex="3">
                            <GridPane.margin>
                               <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                            </GridPane.margin>
                         </Label>
-                        <CheckBox fx:id="logToFileToggle" accessibleHelp="file under log/date/" disable="true" mnemonicParsing="false" onAction="#logToFileAction" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                        <CheckBox fx:id="useACToggle" accessibleHelp="Use AC current for monitoring height" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                        <Label text="Imaging Electrode" GridPane.rowIndex="5">
+                        <CheckBox fx:id="useACToggle" accessibleHelp="Use AC current for monitoring height" disable="true" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                        <Label text="Deposition Mode" GridPane.rowIndex="5">
                            <GridPane.margin>
                               <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                            </GridPane.margin>
                         </Label>
-                        <CheckBox fx:id="imagingModeToggle" accessibleHelp="Use AC current for monitoring height" disable="true" mnemonicParsing="false" onAction="#imagingModeAction" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                        <CheckBox fx:id="depositionModeToggle" accessibleHelp="Use AC current for monitoring height" mnemonicParsing="false" onAction="#depositionModeAction" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                        <TextField fx:id="pulseSizeField" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                           <GridPane.margin>
+                              <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+                           </GridPane.margin>
+                        </TextField>
                      </children>
                   </GridPane>
                </children>
@@ -118,6 +122,16 @@
                         <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
                      </VBox.margin></Button>
                   <Button mnemonicParsing="false" onAction="#setStandardDACSettingsAction" prefWidth="200.0" text="Set Standard DAC settings">
+                     <VBox.margin>
+                        <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                     </VBox.margin>
+                  </Button>
+                  <Button mnemonicParsing="false" onAction="#depositPulseAction" prefWidth="200.0" text="Deposit Pulse">
+                     <VBox.margin>
+                        <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                     </VBox.margin>
+                  </Button>
+                  <Button mnemonicParsing="false" onAction="#zeroCurrentAction" prefWidth="200.0" text="Zero Current">
                      <VBox.margin>
                         <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
                      </VBox.margin>

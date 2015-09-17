@@ -1,6 +1,7 @@
 package com.misiunas.np.essential.processes
 
 import com.misiunas.geoscala.vectors.Vec
+import com.misiunas.np.essential.DeviceProcess.{Finished, ContinueQ, Continue}
 import com.misiunas.np.essential.{ACDC, Amplifier, DeviceProcess}
 import com.misiunas.np.hardware.stage.PiezoStage
 import com.misiunas.np.hardware.stage.PiezoStage.MoveBy
@@ -22,7 +23,7 @@ import scala.annotation.tailrec
 class Approach private ( val baselineFn: Amplifier => ACDC,
                          val target: Double, // expressed in percent
                          val speed: Double  // step size of
-                         ) extends DeviceProcess[Vec] {
+                         ) extends DeviceProcess {
 
   val log = org.slf4j.LoggerFactory.getLogger(getClass.getName)
 
@@ -32,17 +33,15 @@ class Approach private ( val baselineFn: Amplifier => ACDC,
 
   lazy val baseline: ACDC = baselineFn( amplifier )
 
-  def process: Option[Vec] = {
+  override def init() = {
     baseline // compute baseline for the first time
     log.info("Approach baseline was set to: "+baseline)
     log.info("Cost function for baseline is: "+costFunction(baseline))
-    approach()
-    Some( Talkative.getResponse(xyz, PiezoStage.PositionQ).asInstanceOf[Vec] )
+    // todo: add DC / ACDC mode read
   }
 
   /** function for approaching the sample */
-  @tailrec
-  final def approach(): Unit = {
+  override def step(): ContinueQ = {
     // get new amplifier readings
     amplifier.updateTillNew() // locks
     // measure IV
@@ -56,19 +55,20 @@ class Approach private ( val baselineFn: Amplifier => ACDC,
       case p if p == 0.0 =>
         // far away, do big steps
         Talkative.getResponse( xyz , MoveBy( Vec(0,0, speed) ) )
-        approach()
+        Continue
       case p if p < 1.0 =>
         // smaller steps if we are close
         val step = 0.9*speed*(1-p)+0.1*speed
         Talkative.getResponse( xyz , MoveBy( Vec(0,0, step) ) )
-        approach()
+        Continue
       case p if p == 1.0 =>
         // there but test if everything ok
         amplifier.wait(10)
         val meanX = amplifier.getMean(10)
         if( alarmTrigger(meanX) < 0.95 )  // still not there
-          approach()
-        // otherwise - we have arrived
+          Continue
+        else // otherwise - we have arrived
+          Finished
     }
   }
   

@@ -28,7 +28,7 @@ class MotionLogger (val iv: ActorRef, val xyz: ActorRef) extends Actor with Acto
     // open file stream
     val file = ConfigFactory.load()
       .getString("logging.logPiezoFile")
-      .replace("*DateTime*", DateTime.now.toString("YYYY-MM-dd HH:mm"))
+      .replace("*DateTime*", DateTime.now.toString("YYYY-MM-dd HHmm"))
     writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"))
     writer.write("DateTime , X , Y , Z , realX , realY , realZ , DC_V , DC_I , AC_V , AC_I, dt \n")
     log.info("Opened motion logger to file: "+file)
@@ -42,7 +42,7 @@ class MotionLogger (val iv: ActorRef, val xyz: ActorRef) extends Actor with Acto
       // send out info requests
       xyz ! PiezoStage.StatusQ
       xyz ! PiezoStage.PositionQ
-      iv ! IV.Get
+      iv ! IV.Get()
       time = Some( DateTime.now() )
     case data: IV.IVData =>
       ivData = Some(data)
@@ -84,11 +84,12 @@ class MotionLogger (val iv: ActorRef, val xyz: ActorRef) extends Actor with Acto
         case None => " ,  , "
       }) + " , " +
     (ivData match {
-      case Some(iv) => iv.dc_V + " , "+ iv.dc_I + " , " + iv.ac_V + " , "+ iv.ac_I + " , " + iv.dt
+      case Some(iv) => iv.dc_V.head + " , "+ iv.dc_I.head + " , " + iv.ac_V.head + " , "+ iv.ac_I.head + " , " + iv.dt
       case None => " , , , , "
     }) + "\n"
     // write it
     writer.write(line)
+    writer.flush()
     // clear buffer
     time = None
     pos = None

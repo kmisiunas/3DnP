@@ -8,12 +8,16 @@ import javafx.scene.control._
 import akka.actor.ActorRef
 import com.misiunas.np._
 import com.misiunas.np.essential.Processor
-import com.misiunas.np.essential.processes.{KeepDistance, Approach}
+import com.misiunas.np.essential.processes.{SimpleProcess, KeepDistance, Approach}
 import com.misiunas.np.essential.processes.minor.ImagingDACSettings
 import com.misiunas.np.gui.tools.Fields
+import com.misiunas.np.hardware.adc.control.DAC.{ImagingElectrode, DepositionElectrode}
 import com.typesafe.config.ConfigFactory
 
 /**
+ * ToDo:
+ *  - actively synchronise the values
+ *
  * Created by kmisiunas on 15-09-08.
  */
 class ManualController extends Initializable {
@@ -29,9 +33,9 @@ class ManualController extends Initializable {
   @FXML private var approachDistanceField: TextField = null
   @FXML private var approachSpeedField: TextField = null
   @FXML private var conductivityCheckIntervalField: TextField = null
-  @FXML private var logToFileToggle: CheckBox = null
   @FXML private var useACToggle: CheckBox = null
-  @FXML private var imagingModeToggle: CheckBox = null
+  @FXML private var pulseSizeField: TextField = null
+  @FXML private var depositionModeToggle: CheckBox = null
 
   // # Actions
 
@@ -54,12 +58,21 @@ class ManualController extends Initializable {
   @FXML protected def setStandardDACSettingsAction(event: ActionEvent) =
     sendToActor( ImagingDACSettings() )
 
+  @FXML protected def depositPulseAction(event: ActionEvent) =
+    sendToActor(SimpleProcess.amplifier(amp => amp.pulseAndWait(pulseSizeField.getText.toDouble)))
+
+  @FXML protected def zeroCurrentAction(event: ActionEvent) =
+    sendToActor(SimpleProcess.amplifier( amp => amp.zeroCurrent() ))
 
   // ## Other Actions
 
-  @FXML protected def imagingModeAction(event: ActionEvent) = {}
-
-  @FXML protected def logToFileAction(event: ActionEvent) = {}
+  @FXML protected def depositionModeAction(event: ActionEvent) = {
+    if(depositionModeToggle.isSelected) {
+      sendToActor(SimpleProcess.amplifier(amp => amp.setElectrodeMode(DepositionElectrode)))
+    } else {
+      sendToActor(SimpleProcess.amplifier(amp => amp.setElectrodeMode(ImagingElectrode)))
+    }
+  }
 
   // # Init
 
@@ -67,16 +80,18 @@ class ManualController extends Initializable {
     Fields.onlyNumbers(approachDistanceField)
     Fields.onlyNumbers(approachSpeedField)
     Fields.onlyNumbers(conductivityCheckIntervalField)
+    Fields.onlyNumbers(pulseSizeField)
 
     val conf = ConfigFactory.load
 
     approachDistanceField.setText(""+ 0.85  )
     approachSpeedField.setText(""+ conf.getDouble("experiment.tipRadius")/4  )
-    conductivityCheckIntervalField.setText(""+ 30  )
+    conductivityCheckIntervalField.setText(""+ 60  )
 
-    logToFileToggle.setSelected(false)
+    pulseSizeField.setText("100.0")
+
     useACToggle.setSelected(false)
-    imagingModeToggle.setSelected(true)
+    depositionModeToggle.setSelected(true)
 
     setProcessorStatus(false) // no process initially
   }

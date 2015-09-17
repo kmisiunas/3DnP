@@ -1,19 +1,28 @@
 package com.misiunas.np.essential
 
 import akka.actor.ActorRef
+import com.misiunas.np.essential.DeviceProcess.ContinueQ
 import com.misiunas.np.hardware.stage.PiezoStage
 
 /**
  * # represents a process that locks others in a queue
  *
+ * ToDo: implement such that other processes could be easily executed from main one
+ *
  * Mostly boiler code
+ *
+ * Object implementation
  *
  * Created by kmisiunas on 15-09-04.
  */
-trait DeviceProcess[A] {
+trait DeviceProcess {
 
-  /** method to be implemented to determine a process */
-  protected def process: Option[A]
+  /** steps Must perform small actions where the process can be broke in between */
+  def step(): ContinueQ
+
+  def preStop(): Unit = {}
+
+  def init(): Unit = {}
 
   private var xyzRaw: ActorRef = null
   private var amplifierRaw: Amplifier = null
@@ -24,11 +33,19 @@ trait DeviceProcess[A] {
     if(amplifierRaw != null) amplifierRaw else throw new Exception("Process not initialised correctly: amplifier missing")
 
   /** method for running the process */
-  final def start(xyz: ActorRef, amplifier: Amplifier): Option[A] = {
+  final def start(xyz: ActorRef, amplifier: Amplifier): Unit = {
     this.xyzRaw = xyz
     this.amplifierRaw = amplifier
-    //todo: logging
-    process
+    init()
   }
+
+}
+
+object DeviceProcess{
+
+  /** way of coordinating steps */
+  abstract class ContinueQ()
+  case object Continue extends ContinueQ
+  case object Finished extends ContinueQ
 
 }
