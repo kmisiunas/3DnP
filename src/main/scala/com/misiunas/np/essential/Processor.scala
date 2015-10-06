@@ -62,7 +62,8 @@ class Processor ( val xyz: ActorRef,
       }
 
     case Processor.Kill =>
-      log.info("Process kill order issued by: "+sender())
+      log.info("Processes kill order issued by: "+sender())
+      jobQueue = Nil
       killFlag = true
 
     case _ => log.warning("Message not understood.")

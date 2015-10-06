@@ -1,6 +1,7 @@
 package com.misiunas.np.essential.implementations
 
 import com.misiunas.np.hardware.adc.control.DAC
+import com.misiunas.np.hardware.adc.control.DAC.Pulse
 import com.misiunas.np.tools.Talkative
 
 /**
@@ -8,7 +9,6 @@ import com.misiunas.np.tools.Talkative
  */
 abstract class AmplifierControl extends AmplifierReaders {
 
-  def pulseAndWait(magnitude: Double):Unit =
-    Talkative.getResponse(dac, DAC.Pulse(magnitude))
+  def pulse(magnitude: Double):Unit = dac ! DAC.Pulse(magnitude)
 
 }

@@ -45,7 +45,7 @@ class ApplicationFX extends Application {
     val scrollPane: ScrollPane = new ScrollPane()
     val content: VBox = new VBox()
     scrollPane.setContent(content)
-    scrollPane.setPrefSize(700, 800)
+    scrollPane.setPrefSize(720, 800)
     // add Piezo controls
     loader.setLocation(getClass.getResource("/com/misiunas/np/gui/xyz/xyz_layout.fxml"))
     val xyzPane: Pane = loader.load.asInstanceOf[Pane]

@@ -49,6 +49,7 @@
                         <RowConstraints prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
                         <Label text="Approach distance fraction">
@@ -81,24 +82,29 @@
                               <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
                            </GridPane.margin>
                         </TextField>
-                        <Label text="Pulse size (" GridPane.rowIndex="4">
-                           <GridPane.margin>
-                              <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
-                           </GridPane.margin>
-                        </Label>
                         <Label text="Use AC " GridPane.rowIndex="3">
                            <GridPane.margin>
                               <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                            </GridPane.margin>
                         </Label>
                         <CheckBox fx:id="useACToggle" accessibleHelp="Use AC current for monitoring height" disable="true" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                        <Label text="Pulse size (" GridPane.rowIndex="4">
+                           <GridPane.margin>
+                              <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                           </GridPane.margin>
+                        </Label>
+                        <TextField fx:id="pulseSizeField" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                           <GridPane.margin>
+                              <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+                           </GridPane.margin></TextField>
                         <Label text="Deposition Mode" GridPane.rowIndex="5">
                            <GridPane.margin>
                               <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                            </GridPane.margin>
                         </Label>
                         <CheckBox fx:id="depositionModeToggle" accessibleHelp="Use AC current for monitoring height" mnemonicParsing="false" onAction="#depositionModeAction" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                        <TextField fx:id="pulseSizeField" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                        <Label text="H step (um) " GridPane.rowIndex="6" />
+                        <TextField fx:id="hStepField" GridPane.columnIndex="1" GridPane.rowIndex="6">
                            <GridPane.margin>
                               <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
                            </GridPane.margin>
@@ -127,6 +133,11 @@
                      </VBox.margin>
                   </Button>
                   <Button mnemonicParsing="false" onAction="#depositPulseAction" prefWidth="200.0" text="Deposit Pulse">
+                     <VBox.margin>
+                        <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                     </VBox.margin>
+                  </Button>
+                  <Button mnemonicParsing="false" onAction="#stepAndPulseAction" prefWidth="200.0" text="H step, Pulse, -H step">
                      <VBox.margin>
                         <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
                      </VBox.margin>

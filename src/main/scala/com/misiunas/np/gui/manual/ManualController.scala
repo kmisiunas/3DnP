@@ -9,7 +9,7 @@ import akka.actor.ActorRef
 import com.misiunas.np._
 import com.misiunas.np.essential.Processor
 import com.misiunas.np.essential.processes.{SimpleProcess, KeepDistance, Approach}
-import com.misiunas.np.essential.processes.minor.ImagingDACSettings
+import com.misiunas.np.essential.processes.minor.{StepAndPulse, ImagingDACSettings}
 import com.misiunas.np.gui.tools.Fields
 import com.misiunas.np.hardware.adc.control.DAC.{ImagingElectrode, DepositionElectrode}
 import com.typesafe.config.ConfigFactory
@@ -33,9 +33,12 @@ class ManualController extends Initializable {
   @FXML private var approachDistanceField: TextField = null
   @FXML private var approachSpeedField: TextField = null
   @FXML private var conductivityCheckIntervalField: TextField = null
-  @FXML private var useACToggle: CheckBox = null
   @FXML private var pulseSizeField: TextField = null
+  @FXML private var useACToggle: CheckBox = null
   @FXML private var depositionModeToggle: CheckBox = null
+  @FXML private var hStepField: TextField = null
+
+  @FXML private var genericField: TextField = null
 
   // # Actions
 
@@ -59,7 +62,11 @@ class ManualController extends Initializable {
     sendToActor( ImagingDACSettings() )
 
   @FXML protected def depositPulseAction(event: ActionEvent) =
-    sendToActor(SimpleProcess.amplifier(amp => amp.pulseAndWait(pulseSizeField.getText.toDouble)))
+    sendToActor(SimpleProcess.amplifier(amp => amp.pulse(getPulseSize())))
+
+  @FXML protected def stepAndPulseAction(event: ActionEvent) =
+    sendToActor(StepAndPulse(hStepField.getText.toDouble, getPulseSize()))
+
 
   @FXML protected def zeroCurrentAction(event: ActionEvent) =
     sendToActor(SimpleProcess.amplifier( amp => amp.zeroCurrent() ))
@@ -81,6 +88,8 @@ class ManualController extends Initializable {
     Fields.onlyNumbers(approachSpeedField)
     Fields.onlyNumbers(conductivityCheckIntervalField)
     Fields.onlyNumbers(pulseSizeField)
+    Fields.onlyNumbers(hStepField)
+
 
     val conf = ConfigFactory.load
 
@@ -89,6 +98,7 @@ class ManualController extends Initializable {
     conductivityCheckIntervalField.setText(""+ 60  )
 
     pulseSizeField.setText("100.0")
+    hStepField.setText("20.0")
 
     useACToggle.setSelected(false)
     depositionModeToggle.setSelected(true)
@@ -120,5 +130,9 @@ class ManualController extends Initializable {
         killProcessorButton.setDisable(true) // no process
     }
   }
+
+  def getPulseSize(): Double =
+    if( pulseSizeField == null ) 0.0
+    else pulseSizeField.getText.toDouble
 
 }

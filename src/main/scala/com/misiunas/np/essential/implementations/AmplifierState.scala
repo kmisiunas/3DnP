@@ -19,7 +19,7 @@ abstract class AmplifierState extends AmplifierControl {
     // ignore AC current
     // Go from current level based on IV readings, because this avoids overshoots
     // coarse current search
-
+    //todo!
     // fine search
 
   }
