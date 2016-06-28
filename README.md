@@ -1,7 +1,13 @@
 # 3DnP
 
-## ToDo
+## ToDo Now
 
+ - [ ] GUI control for PID controller
+ - [ ] Logging + GUI activation 
+
+ 
+## ToDo Longterm
+ 
  - [X] TCP DAC communication
  - [X] JAVAFX GUI
  - [ ] Safe TCP connection handling and automatic re-connection
@@ -10,11 +16,11 @@
  - [ ] Hopping mode imaging
  - [X] Processor with ability to kill Process 
  
- ## Guidelines
+## Guidelines
  
- ### GUI
+### GUI
  
-  - Window width up to 700px
+ - Window width up to 700px
 
 
 ### Logs

@@ -31,12 +31,42 @@ class Approach private ( val baselineFn: Amplifier => ACDC,
 
   type Probability = Double
 
-  lazy val baseline: ACDC = baselineFn( amplifier )
+
+  // experimental method for aproaching the tip
+  class Baseline {
+
+    private var lastCheck: Long = 0
+
+    private var mean: ACDC = measure()
+
+    // get
+    def apply(): ACDC = mean
+
+    val toRemeasure = ConfigFactory.load.getBoolean("approach.baselineMeasurement.remeasure")
+    val interval = ConfigFactory.load.getDouble("approach.baselineMeasurement.interval")
+    val retreat = ConfigFactory.load.getDouble("approach.baselineMeasurement.retreat")
+    val recover = ConfigFactory.load.getDouble("approach.baselineMeasurement.recover")
+
+    def measure(): ACDC = {
+      lastCheck = System.currentTimeMillis();
+      mean = baselineFn(amplifier);
+      mean
+    }
+
+    def timeToRemeasure(): Boolean = toRemeasure && lastCheck + interval*1000 >= System.currentTimeMillis()
+
+
+  }
+
+  lazy val baseline: Baseline = new Baseline()
+
 
   override def init() = {
+    ConfigFactory.load.getBoolean("approach.baselineMeasurement")
+    ConfigFactory.load.getDouble("approach.baselineMeasurementInterval")
     baseline // compute baseline for the first time
-    log.info("Approach baseline was set to: "+baseline)
-    log.info("Cost function for baseline is: "+costFunction(baseline))
+    log.info("Approach baseline was set to: "+baseline())
+    log.info("Cost function for baseline is: "+ costFunction(baseline()))
     // todo: add DC / ACDC mode read
   }
 
@@ -52,6 +82,12 @@ class Approach private ( val baselineFn: Amplifier => ACDC,
     val p = alarmTrigger( x )
     // have we arrived?
     p match {
+      case p if p == 0.0 && baseline.timeToRemeasure() =>
+        // far away, time to remeasure
+        Talkative.getResponse( xyz , MoveBy( Vec(0,0, -baseline.retreat) ) )
+        baseline.measure()
+        Talkative.getResponse( xyz , MoveBy( Vec(0,0, baseline.recover) ) )
+        Continue
       case p if p == 0.0 =>
         // far away, do big steps
         Talkative.getResponse( xyz , MoveBy( Vec(0,0, speed) ) )

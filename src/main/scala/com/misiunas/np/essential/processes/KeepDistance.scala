@@ -6,6 +6,7 @@ import com.misiunas.np.essential.DeviceProcess
 import com.misiunas.np.essential.DeviceProcess.{Continue, ContinueQ}
 import com.misiunas.np.hardware.stage.PiezoStage
 import com.misiunas.np.tools.{PIDController, Talkative}
+import com.typesafe.config.ConfigFactory
 
 import scala.annotation.tailrec
 
@@ -28,9 +29,9 @@ class KeepDistance (distanceFraction: Double,
   var lastBaselineCheck: Long = 0
 
   val pid: PIDController = PIDController(
-    kp = 5.0/1000.0*100/20, // for 1% deviation, take 5nm step
-    ki = 1.0/1000.0*100/20, // guess value
-    kd = 0.0  // sensitive to noise
+    kp = ConfigFactory.load.getDouble("approach.keepDistancePid.kp"),
+    ki = ConfigFactory.load.getDouble("approach.keepDistancePid.ki"),
+    kd = ConfigFactory.load.getDouble("approach.keepDistancePid.kd")
   )
 
   /** method for keeping close to the surface
