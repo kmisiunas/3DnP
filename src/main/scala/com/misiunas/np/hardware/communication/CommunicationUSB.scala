@@ -1,24 +1,14 @@
-package com.misiunas.np.hardware
-
-import java.io.{BufferedReader, DataOutputStream, InputStreamReader}
-import java.net.Socket
-
-import akka.actor.{Actor, Props}
-import com.typesafe.config.ConfigFactory
-
-import scala.annotation.tailrec
+package com.misiunas.np.hardware.communication
 
 /**
- * Simple TCP command communicator with AKKA
- *
- * Created by kmisiunas on 15-08-02.
- */
-class TCPSimple (val socket: Socket, val maxReadWait: Int) extends Actor with akka.actor.ActorLogging {
+  * Created by kmisiunas on 2016-07-01.
+  */
+class CommunicationUSB (val socket: Socket, val maxReadWait: Int) extends Actor with akka.actor.ActorLogging {
 
   // Variables
 
-  import TCPSimple._
-  
+  import CommunicationUSB._
+
   private var inputStream: InputStreamReader = null
   private var inFromServer: BufferedReader = null // Java like, but robust(ish)
   private var outToServer: DataOutputStream =  null
@@ -60,7 +50,7 @@ class TCPSimple (val socket: Socket, val maxReadWait: Int) extends Actor with ak
       else if(current.count(_=='\n') == lines)
         current
       else if(deadline < System.currentTimeMillis())
-          throw new Exception("Timeout while waiting for "+ lines +" response(s) from TCP connection. So far got: '"+current+"'You could increase 'piezo.tcp.readMaxWait'?")
+        throw new Exception("Timeout while waiting for "+ lines +" response(s) from TCP connection. So far got: '"+current+"'You could increase 'piezo.tcp.readMaxWait'?")
       else
         buildString(current)
     }
@@ -87,7 +77,7 @@ class TCPSimple (val socket: Socket, val maxReadWait: Int) extends Actor with ak
 }
 
 
-object TCPSimple {
+object CommunicationUSB {
 
 
   // communication
