@@ -2,6 +2,7 @@ package com.misiunas.np.gui.test;
 
 import javafx.beans.property.SimpleStringProperty;
 
+
 public class Person {
     private final SimpleStringProperty firstName = new SimpleStringProperty("");
     private final SimpleStringProperty lastName = new SimpleStringProperty("");
@@ -40,4 +41,7 @@ public class Person {
     public void setEmail(String fName) {
         email.set(fName);
     }
+
+
+
 }

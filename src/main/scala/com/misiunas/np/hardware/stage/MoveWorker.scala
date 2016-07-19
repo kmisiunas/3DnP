@@ -4,9 +4,9 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.misiunas.geoscala.vectors.Vec
-import com.misiunas.np.hardware.TCPSimple
+import com.misiunas.np.hardware.communication.Communication.{SerialAsk, SerialReply, SerialTell}
+import com.misiunas.np.hardware.communication.CommunicationTCP
 import com.misiunas.np.hardware.stage.PiezoStage.{Move, Stop}
-import TCPSimple._
 import com.misiunas.np.tools.Wait
 import com.typesafe.config.ConfigFactory
 
@@ -15,24 +15,20 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
-/**
- * Executes movement commands one by one
- *
- * Created by kmisiunas on 15-08-02.
+/** Executes movement commands one at the time
+  *
+  * Warning - the axes for the materials are based on physical space, not representation
+  *
+  * Created by kmisiunas on 15-08-02.
  */
-protected class MoverWorker (val tcp: ActorRef) extends Actor with ActorLogging {
-
-  import collection.JavaConversions._
-
-  val min: Vec = Vec( ConfigFactory.load.getDoubleList("piezo.minPosition").toList.map(d => d.toDouble) )
-  val max: Vec = Vec( ConfigFactory.load.getDoubleList("piezo.maxPosition").toList.map(d => d.toDouble) )
+protected class MoveWorker(val serial: ActorRef, min: Vec, max: Vec) extends Actor with ActorLogging {
 
 
   override def receive: Receive = {
     case "awake" => {}
     case Move(r) =>
       if (isWithinRange(r))
-        tcp ! TCPTell("MOV 1 " + r.x.toFloat + " 2 "+ r.y.toFloat + " 3 " + r.z.toFloat  )
+        serial ! SerialTell( formulateMoveCommand(r) )
       else {  // todo fix this
         sender ! "Error: position (" + r.x + ", " + r.y + ", " + r.z + ") is outside the bounds. skipping."
         context.parent ! "Reset Position"
@@ -47,11 +43,16 @@ protected class MoverWorker (val tcp: ActorRef) extends Actor with ActorLogging 
   @tailrec
   private def waitUntilLastJobFinished(): Unit = {
     implicit val timeout = Timeout(1 seconds)
-    val isMovingFuture = tcp ? TCPAsk("" + 5.toChar)
-    val isMovingReply = Await.result(isMovingFuture, timeout.duration).asInstanceOf[TCPReply].reply
+    val isMovingFuture = serial ? SerialAsk("" + 5.toChar)
+    val isMovingReply = Await.result(isMovingFuture, timeout.duration).asInstanceOf[SerialReply].reply
     val isMoving = if (isMovingReply.head.trim == "0") false else true
     if(isMoving) waitUntilLastJobFinished()
   }
+
+  def formulateMoveCommand(r: Vec): String = "MOV" + (
+    if(min.x < max.x) {" 1 " + r.x.toFloat } else {""} ) + (
+    if(min.y < max.y) {" 2 " + r.y.toFloat } else {""} ) + (
+    if(min.z < max.z) {" 3 " + r.z.toFloat } else {""} )
 
   def isWithinRange(r: Vec): Boolean =
     (r.x >= min.x && r.x <= max.x) && (r.y >= min.y && r.y <= max.y) && (r.z >= min.z && r.z <= max.z)
@@ -59,6 +60,6 @@ protected class MoverWorker (val tcp: ActorRef) extends Actor with ActorLogging 
 
 }
 
-object MoverWorker{
-  def props(tcp: ActorRef): Props = Props(new MoverWorker( tcp ) )
+object MoveWorker{
+  def props(serial: ActorRef, min: Vec, max: Vec): Props = Props(new MoveWorker( serial, min , max ) )
 }

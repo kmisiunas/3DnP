@@ -1,12 +1,12 @@
 import akka.actor.ActorSystem
-import com.misiunas.np.hardware.TCPSimple
-import com.misiunas.np.hardware.adc.control.{DepositionElectrode, ImagingElectrode, DACStatus, DAC}
+import com.misiunas.np.hardware.adc.control.{DAC, DACStatus, DepositionElectrode, ImagingElectrode}
 import com.misiunas.np.hardware.adc.control.DAC.SetDC_V
+import com.misiunas.np.hardware.communication.CommunicationTCP$
 import com.misiunas.np.tools.Talkative
 
 val system = ActorSystem("3DnP")
 
-val tcp = system.actorOf(TCPSimple.propsForADCControls(), "tcp")
+val tcp = system.actorOf(CommunicationTCP.propsForADCControls(), "tcp")
 
 val dac = system.actorOf(DAC.props(), "dac")
 

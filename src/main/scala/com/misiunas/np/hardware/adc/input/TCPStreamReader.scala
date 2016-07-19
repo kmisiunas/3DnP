@@ -4,8 +4,7 @@ import java.io.{BufferedReader, DataOutputStream, InputStreamReader}
 import java.net.Socket
 
 import akka.actor.{Actor, Props}
-import com.misiunas.np.hardware.TCPSimple
-import TCPSimple.{TCPAsk, TCPReply}
+import com.misiunas.np.hardware.communication.CommunicationTCP
 import com.typesafe.config.ConfigFactory
 
 import scala.annotation.tailrec

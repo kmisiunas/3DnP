@@ -5,7 +5,7 @@ import java.net.Socket
 import akka.actor.Actor.Receive
 import akka.actor.{Props, ActorLogging, Actor}
 import com.misiunas.np.hardware.adc.input.IVDataActor.RawDataContainer
-import com.misiunas.np.hardware.stage.MoverWorker
+import com.misiunas.np.hardware.stage.MoveWorker
 import com.typesafe.config.ConfigFactory
 import org.joda.time.DateTime
 import play.api.libs.json

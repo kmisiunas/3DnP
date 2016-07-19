@@ -4,7 +4,9 @@ import akka.actor.ActorRef
 import akka.util.Timeout
 
 import scala.concurrent.{Await, Future}
-import akka.pattern.{ ask, pipe }
+import akka.pattern.{ask, pipe}
+import com.misiunas.geoscala.vectors.Vec
+import com.misiunas.np.hardware.stage.PiezoStage.PositionQ
 
 /**
  * # Helper methods for dealing with Akka actors
@@ -18,6 +20,8 @@ object Talkative {
 
   /** waits until the response is generated (locks the thread) */
   def getResponse[T](actor: ActorRef, message: Any): T = Await.result(actor ? message, timeout.duration).asInstanceOf[T]
+
+  def getXYZPosition(xyz: ActorRef): Vec = getResponse[Vec](xyz, PositionQ)
 
 
 }

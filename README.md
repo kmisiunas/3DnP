@@ -17,6 +17,10 @@
  - [X] Processor with ability to kill Process 
  
 ## Guidelines
+
+ - Need to build a modular system, where big components rely on simpler ones
+ - Blockade mechanism for tasks (eg. no XY motion while doing baseline measurement)
+ - Robust error handling when there in the tasks
  
 ### GUI
  

@@ -1,9 +1,9 @@
 package com.misiunas.np.hardware.adc.control
 
 import akka.actor.Actor.Receive
-import akka.actor.{Props, Actor, ActorLogging}
-import com.misiunas.np.hardware.TCPSimple
+import akka.actor.{Actor, ActorLogging, Props}
 import com.misiunas.np.hardware.adc.control.DAC._
+import com.misiunas.np.hardware.communication.{Communication, CommunicationTCP$}
 
 /**
  * # Send commands to Digital to Analog Converter (DAC)
@@ -12,7 +12,7 @@ import com.misiunas.np.hardware.adc.control.DAC._
  */
 class DAC extends Actor with ActorLogging{
 
-  protected val tcp = context.actorOf(TCPSimple.propsForADCControls() ,"tcp")
+  protected val tcp = context.actorOf(Communication.propsForADCControls() ,"tcp")
   protected val worker = context.actorOf(DACWorker.props(tcp), "worker")
 
   var status: DACStatus = DACStatus( 0, 0, ac_frequency = 50, false, DAC.ImagingElectrode )

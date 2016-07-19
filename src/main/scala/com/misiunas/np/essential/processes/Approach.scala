@@ -1,10 +1,11 @@
 package com.misiunas.np.essential.processes
 
+import akka.actor.SupervisorStrategy.Stop
 import com.misiunas.geoscala.vectors.Vec
-import com.misiunas.np.essential.DeviceProcess.{Finished, ContinueQ, Continue}
+import com.misiunas.np.essential.DeviceProcess.{Continue, ContinueQ, Finished}
 import com.misiunas.np.essential.{ACDC, Amplifier, DeviceProcess}
 import com.misiunas.np.hardware.stage.PiezoStage
-import com.misiunas.np.hardware.stage.PiezoStage.MoveBy
+import com.misiunas.np.hardware.stage.PiezoStage.{MoveBy, PositionQ}
 import com.misiunas.np.tools.Talkative
 import com.typesafe.config.ConfigFactory
 
@@ -87,15 +88,7 @@ class Approach private ( val baselineFn: Amplifier => ACDC,
         Talkative.getResponse( xyz , MoveBy( Vec(0,0, -baseline.retreat) ) )
         baseline.measure()
         Talkative.getResponse( xyz , MoveBy( Vec(0,0, baseline.recover) ) )
-        Continue
-      case p if p == 0.0 =>
-        // far away, do big steps
-        Talkative.getResponse( xyz , MoveBy( Vec(0,0, speed) ) )
-        Continue
-      case p if p < 1.0 =>
-        // smaller steps if we are close
-        val step = 0.9*speed*(1-p)+0.1*speed
-        Talkative.getResponse( xyz , MoveBy( Vec(0,0, step) ) )
+        log.info("Remeasured the baseline: "+baseline())
         Continue
       case p if p == 1.0 =>
         // there but test if everything ok
@@ -105,12 +98,25 @@ class Approach private ( val baselineFn: Amplifier => ACDC,
           Continue
         else // otherwise - we have arrived
           Finished
+      case p if p < 1.0 =>
+        // smaller steps if we are close
+        val step = 0.9*speed*(1-p)+0.1*speed
+        Talkative.getResponse( xyz , MoveBy( Vec(0,0, step) ) )
+        Continue
+      case p if Talkative.getXYZPosition( xyz ).z > 99.0 =>
+        // far away, do big steps
+        log.info("Failed to find surface on this approach")
+        Finished
+      case p if p == 0.0 =>
+        // far away, do big steps
+        Talkative.getResponse( xyz , MoveBy( Vec(0,0, speed) ) )
+        Continue
     }
   }
   
   
   /** function for evaluating cost of dropping */
-  def costFunction(y: ACDC): Double = {
+  def costFunctionAdvances(y: ACDC): Double = {
     val x = normalise(y)
     // mean - std
     val kappa = 0.5
@@ -119,8 +125,12 @@ class Approach private ( val baselineFn: Amplifier => ACDC,
     mean - kappa * math.sqrt( pow2(x.ac - mean) +  pow2(x.dc - mean) )
   }
 
+  /** function for evaluating cost of dropping */
+  def costFunction(y: ACDC): Double = normalise(y).dc
+
+
   /** returns values in a range from 0 to 1.0 */
-  def normalise(x: ACDC): ACDC = ACDC(ac = x.ac.abs /baseline.ac.abs, dc = x.dc.abs/baseline.dc.abs)
+  def normalise(x: ACDC): ACDC = ACDC(ac = x.ac.abs /baseline().ac.abs, dc = x.dc.abs/baseline().dc.abs)
 
   /** what is the probability that target was reached? */
   def alarmTrigger(x: ACDC): Probability = {

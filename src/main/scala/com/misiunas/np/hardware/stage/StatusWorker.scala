@@ -1,23 +1,22 @@
 package com.misiunas.np.hardware.stage
 
-import akka.actor.{ActorLogging, Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
 import akka.pattern.ask
 import breeze.numerics.log
 import com.misiunas.geoscala.vectors.Vec
-import com.misiunas.np.hardware.TCPSimple
+import com.misiunas.np.hardware.communication.{Communication, CommunicationTCP}
 import com.misiunas.np.hardware.stage.PiezoStage.PiezoStatus
 import org.joda.time.DateTime
-import scala.concurrent.Await
 
+import scala.concurrent.Await
 import scala.language.postfixOps
 
-/**
- * # automatic query method to the Piezo stage
- *
- * Created by kmisiunas on 15-08-15.
- */
-protected class StatusWorker (val tcp: ActorRef) extends Actor with ActorLogging {
+/** automatic query method to the Piezo stage
+  *
+  * Created by kmisiunas on 15-08-15.
+  */
+protected class StatusWorker (val serial: ActorRef) extends Actor with ActorLogging {
 
   import context._
 
@@ -29,7 +28,7 @@ protected class StatusWorker (val tcp: ActorRef) extends Actor with ActorLogging
   override def postRestart(reason: Throwable) = {}
 
   def receive = {
-    case "awake" => {log.debug("awake command initiated - no action taken")}
+    case "awake" => {log.debug("awake zodziucommand initiated - no action taken")}
     case "tick" =>
       //log.debug("Received a 'tick'")
       // ask stage about this
@@ -44,16 +43,16 @@ protected class StatusWorker (val tcp: ActorRef) extends Actor with ActorLogging
   /** request information about piezo */
   def getPiezoStatus(): Option[PiezoStatus] = {
     try {
-      import TCPSimple._
+      import Communication._
       implicit val timeout = Timeout(1 seconds)
 
-      val positionFuture = tcp ? TCPAsk("POS?", lines = 3)
-      val positionReply = Await.result(positionFuture, timeout.duration).asInstanceOf[TCPReply].reply
+      val positionFuture = serial ? SerialAsk("POS?", lines = 3)
+      val positionReply = Await.result(positionFuture, timeout.duration).asInstanceOf[SerialReply].reply
       log.debug("raw POS? response: {}", positionReply)
       val position: Vec = interpretPositions(positionReply)
 
-      val isMovingFuture = tcp ? TCPAsk("" + 5.toChar)
-      val isMovingReply = Await.result(isMovingFuture, timeout.duration).asInstanceOf[TCPReply].reply
+      val isMovingFuture = serial ? SerialAsk("" + 5.toChar)
+      val isMovingReply = Await.result(isMovingFuture, timeout.duration).asInstanceOf[SerialReply].reply
       log.debug("Piezo response to \""+5.toChar+"\"  command: {}", isMovingReply)
       val isMoving = if (isMovingReply.head.trim == "0") false else true
 

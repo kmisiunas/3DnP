@@ -108,9 +108,9 @@ class XYZController extends Initializable {
 
   def setFieldPos(vector: Vec): Unit = {
     if( !xPosField.isFocused && !yPosField.isFocused && !zPosField.isFocused ) {
-      xPosField.setText("" + vector.x)
-      yPosField.setText("" + vector.y)
-      zPosField.setText("" + vector.z)
+      xPosField.setText(formatPos(vector.x))
+      yPosField.setText(formatPos(vector.y))
+      zPosField.setText(formatPos(vector.z))
       // hope it does not tiger event listener!
     }
   }

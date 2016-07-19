@@ -1,17 +1,18 @@
 package com.misiunas.np.hardware.stage
 
 import akka.actor.SupervisorStrategy.Restart
-import akka.actor.{ActorRef, Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
 import com.misiunas.geoscala.vectors.Vec
-import com.misiunas.np.hardware.TCPSimple
-import TCPSimple.{TCPReply, TCPAsk, TCPTell}
 import com.misiunas.np.hardware.logging.MotionLogger
 import com.misiunas.np.hardware.stage.PiezoStage.PiezoStatus
 import com.misiunas.np.tools.{Talkative, Wait}
 import com.typesafe.config.ConfigFactory
 import org.joda.time.DateTime
 import akka.pattern.ask
+import com.misiunas.np.hardware.communication.Communication.{SerialAsk, SerialReply, SerialTell}
+import com.misiunas.np.hardware.communication.CommunicationTCP
+
 import scala.annotation.tailrec
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -47,10 +48,17 @@ class PiezoStage extends Actor with ActorLogging {
   // ## Internal Cogs
 
   /** connection with the device */
-  protected val tcp = context.actorOf(TCPSimple.propsForPiezoStage(), "tcp")
+  protected val tcp = context.actorOf(CommunicationTCP.propsForPiezoStage(), "tcp")
+
+  import collection.JavaConversions._
 
   /** actor for moving stage */
-  lazy protected val mover = context.actorOf(MoverWorker.props(tcp), "piezoMover")
+  lazy protected val mover = context.actorOf(
+    MoveWorker.props(
+      tcp,
+      Vec( ConfigFactory.load.getDoubleList("piezo.minPosition").toList.map(d => d.toDouble) ),
+      Vec( ConfigFactory.load.getDoubleList("piezo.maxPosition").toList.map(d => d.toDouble) )
+    ), "piezoMover")
 
   /** actor for moving stage */
   lazy protected val updater = context.actorOf(StatusWorker.props(tcp), "piezoStatus")
@@ -74,7 +82,7 @@ class PiezoStage extends Actor with ActorLogging {
       mover forward move(r + dr)
       registerMotion()
     case Stop =>
-      tcp ! TCPTell("STP")
+      tcp ! SerialTell("STP")
       mover ! Restart // todo: if it has a job in process - what happens?
       self ! "Reset Position"  // where did we stop
     case PositionQ => sender ! r
@@ -96,8 +104,8 @@ class PiezoStage extends Actor with ActorLogging {
     @tailrec
     def checkForResponse(): Unit = {
       implicit val timeout = Timeout(1 seconds)
-      val query = tcp ? TCPAsk("*IDN?")
-      val reply = Await.result(query, timeout.duration).asInstanceOf[TCPReply].reply
+      val query = tcp ? SerialAsk("*IDN?")
+      val reply = Await.result(query, timeout.duration).asInstanceOf[SerialReply].reply
       if (reply.isEmpty){
         Wait.stupid(1000)
         checkForResponse()
@@ -106,7 +114,7 @@ class PiezoStage extends Actor with ActorLogging {
         log.info("Piezo Stage online with response: {}", reply.head)
         // report time it took to go online
         val t0 = System.currentTimeMillis()
-        Talkative.getResponse(tcp, TCPAsk("*IDN?")) // don't care about result
+        Talkative.getResponse(tcp, SerialAsk("*IDN?")) // don't care about result
         log.info("Piezo Stage ping time: "+ (System.currentTimeMillis()-t0) +" ms")
       } else {
         throw new Exception("Unknown response from Piezo Stage via TCP")
@@ -114,9 +122,9 @@ class PiezoStage extends Actor with ActorLogging {
     }
     checkForResponse()
     // Set closed-loop operation for all axes
-    tcp ! TCPTell("SVO 1 1 2 1 3 1")
+    tcp ! SerialTell("SVO 1 1 2 1 3 1")
     // Set max motion velocity
-    tcp ! TCPTell(
+    tcp ! SerialTell(
       "VEL 1 {xy} 2 {xy} 3 {z}"
         .replace("{xy}", config.getDouble("piezo.maxXYSpeed").toFloat.toString )
         .replace("{z}" , config.getDouble("piezo.maxZSpeed" ).toFloat.toString )

@@ -1,12 +1,12 @@
 package com.misiunas.np.hardware.adc.control
 
 import akka.actor.Actor.Receive
-import akka.actor.{Props, ActorRef, ActorLogging, Actor}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
-import com.misiunas.np.hardware.TCPSimple
 import com.misiunas.np.hardware.adc.control.DAC._
 import com.misiunas.np.tools.Talkative
 import akka.pattern.ask
+import com.misiunas.np.hardware.communication.{Communication, CommunicationTCP$}
 
 import scala.concurrent.{Await, Future}
 
@@ -52,7 +52,7 @@ class DACWorker (tcp: ActorRef) extends Actor with ActorLogging {
     try {
       import scala.concurrent.duration._
       implicit val timeout = Timeout(2 seconds)
-      val response: String = Await.result( tcp ? TCPSimple.TCPAsk(st) , timeout.duration).asInstanceOf[String]
+      val response: String = Await.result( tcp ? Communication.SerialAsk(st) , timeout.duration).asInstanceOf[String]
       response.trim == "OK"
     } catch {
       case e: Exception =>
