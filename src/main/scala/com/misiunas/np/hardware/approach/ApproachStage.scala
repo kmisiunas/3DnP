@@ -4,12 +4,11 @@ import akka.actor.SupervisorStrategy.Restart
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.util.Timeout
 import com.misiunas.geoscala.vectors.Vec
-import com.misiunas.np.hardware.approach.ApproachStage.ApproachStageStatus
+import com.misiunas.np.hardware.approach.ApproachStage.{ApproachStageStatus, FeedbackLoop}
 import com.misiunas.np.hardware.communication.Communication.{SerialAsk, SerialReply, SerialTell}
-import com.misiunas.np.hardware.communication.CommunicationTCP
-import com.misiunas.np.hardware.logging.MotionLogger
+import com.misiunas.np.hardware.communication.{CommunicationTCP, CommunicationUSB}
 import com.misiunas.np.hardware.stage.PiezoStage.{Move, MoveBy, PiezoStatus}
-import com.misiunas.np.hardware.stage.{MoveWorker, StatusWorker}
+import com.misiunas.np.hardware.stage.{MoveWorker, StatusPI, StatusWorker, StatusWorkerForPI}
 import com.misiunas.np.tools.{Talkative, Wait}
 import com.typesafe.config.ConfigFactory
 import org.joda.time.DateTime
@@ -43,19 +42,23 @@ class ApproachStage extends Actor with ActorLogging {
   // ## Internal Cogs
 
   /** connection with the device */
-  protected val tcp = context.actorOf(CommunicationTCP.propsForPiezoStage(), "tcp")
+  protected val serial = context.actorOf(CommunicationUSB.props(
+    ConfigFactory.load.getString("approachStage.serial"),
+    ConfigFactory.load.getInt("approachStage.baudrate"),
+    ConfigFactory.load.getInt("approachStage.readMaxWait")
+  ), "usb")
 
   /** actor for moving stage */
   lazy protected val mover = context.actorOf(
     MoveWorker.props(
-      tcp,
+      serial,
       Vec(ConfigFactory.load.getDouble("approachStage.minPosition"), 0.0, 0.0),
       Vec(ConfigFactory.load.getDouble("approachStage.maxPosition"), 0.0, 0.0)
     )
     , "approachMover")
 
   /** actor for moving stage */
-  lazy protected val updater = context.actorOf(StatusWorker.props(tcp), "approachStatus")
+  lazy protected val updater = context.actorOf(StatusWorkerForPI.props(serial, 1, 100), "approachStatus")
 
   import com.misiunas.np.hardware.stage.PiezoStage._
 
@@ -65,8 +68,8 @@ class ApproachStage extends Actor with ActorLogging {
     case _ if !online =>
       log.warning("Approach Stage still offline at {}", DateTime.now.toString("HH:mm"))
     case "Reset Position" => r = status.pos // just propagating position
-    case s: PiezoStatus if sender == updater =>
-      status = ApproachStageStatus(s.lastUpdate, Vec(0,0,s.pos.x), s.moving) //remap
+    case s: StatusPI if sender == updater =>
+      status = ApproachStageStatus(s.timestamp, Vec(0,0,s.pos(0)*1000), s.moving) //remap
       log.debug("New approach stage status registered: {}", status)
     // control commands
     case Move(v) =>
@@ -76,19 +79,21 @@ class ApproachStage extends Actor with ActorLogging {
       mover forward move(r + dr)
       registerMotion()
     case Stop =>
-      tcp ! SerialTell("STP")
+      serial ! SerialTell("STP")
       mover ! Restart // todo: if it has a job in process - what happens?
       self ! "Reset Position"  // where did we stop
     case PositionQ => sender ! r
     case StatusQ => sender ! status
+    case FeedbackLoop(loop) => // todo test
+      if(loop) serial ! SerialTell("SVO 1 1") else serial ! SerialTell("SVO 1 0")
   }
 
   /** moves the stage */
   protected def move(newPos: Vec): Move = {
     if(newPos.x != 0.0 || newPos.y != 0.0)
       log.error("Approach stage can only move in Z axis. Vec invalid: " + newPos)
-    r = Vec(0.0,0.0,newPos.z)
-    Move( Vec( r.z, 0 , 0 ) ) // map to device axes
+    r = Vec(0 ,0, newPos.z)
+    Move( Vec( r.z / 1000.0, 0 , 0 ) ) // map to device axes
   }
 
   override def preStart() = init()
@@ -100,25 +105,25 @@ class ApproachStage extends Actor with ActorLogging {
     @tailrec
     def checkForResponse(): Unit = {
       implicit val timeout = Timeout(1 seconds)
-      val query = tcp ? SerialAsk("*IDN?")
+      val query = serial ? SerialAsk("*IDN?")
       val reply = Await.result(query, timeout.duration).asInstanceOf[SerialReply].reply
       if (reply.isEmpty){
         Wait.stupid(1000)
         checkForResponse()
-      } else if (reply.head.startsWith("Physik Instrumente")){
+      } else if (reply.head.startsWith("(c)2013 Physik Instrumente")){
         online = true;
         log.info("Piezo Stage online with response: {}", reply.head)
         // report time it took to go online
         val t0 = System.currentTimeMillis()
-        Talkative.getResponse(tcp, SerialAsk("*IDN?")) // don't care about result
+        Talkative.getResponse(serial, SerialAsk("*IDN?")) // don't care about result
         log.info("Piezo Stage ping time: "+ (System.currentTimeMillis()-t0) +" ms")
       } else {
-        throw new Exception("Unknown response from Piezo Stage via TCP")
+        throw new Exception("Unknown response from Piezo Stage via USB. Got: "+reply.head)
       }
     }
     checkForResponse()
     // Set closed-loop operation for all axes
-    tcp ! SerialTell("SVO 1 1")
+    serial ! SerialTell("SVO 1 1")
 
     // make sure everything was received
     Wait.stupid(100)
@@ -134,7 +139,8 @@ class ApproachStage extends Actor with ActorLogging {
 
   /** attempt to log motion */
   def registerMotion() = {
-    context.actorSelection("/user/logger.motion") ! MotionLogger.Log
+    // todo
+    //context.actorSelection("/user/logger.motion") ! MotionLogger.Log
   }
 
 }
@@ -149,6 +155,10 @@ object ApproachStage {
 
   case class ApproachStageStatus( lastUpdate: DateTime,
                                   pos: Vec,
-                                  moving: Boolean )
+                                  moving: Boolean
+                                )
+
+  // command for truning feedback controller on and off
+  case class FeedbackLoop(on: Boolean)
 
 }

@@ -1,0 +1,13 @@
+.check-box .box {
+    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 2, 2, 1, 1;
+    -fx-padding: 0.25em; /* 3 -- padding from the outside edge to the mark */
+}
+
+.check-box .mark {
+    -fx-background-color: green;
+    -fx-background-insets: 1 0 -1 0, 0;
+    /*-fx-padding: 0.333333em; /* 4 -- this is half the size of the mark */
+    /* -fx-shape: "M0,4H2L3,6L6,0H8L4,8H2Z"; */
+}

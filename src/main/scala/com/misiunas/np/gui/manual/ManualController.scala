@@ -2,16 +2,16 @@ package com.misiunas.np.gui.manual
 
 import java.net.Socket
 import javafx.event.ActionEvent
-import javafx.fxml.{Initializable, FXML}
+import javafx.fxml.{FXML, Initializable}
 import javafx.scene.control._
 
 import akka.actor.ActorRef
 import com.misiunas.np._
 import com.misiunas.np.essential.Processor
-import com.misiunas.np.essential.processes.{SimpleProcess, KeepDistance, Approach}
-import com.misiunas.np.essential.processes.minor.{StepAndPulse, ImagingDACSettings}
+import com.misiunas.np.essential.processes._
+import com.misiunas.np.essential.processes.minor.{ImagingDACSettings, StepAndPulse}
 import com.misiunas.np.gui.tools.Fields
-import com.misiunas.np.hardware.adc.control.DAC.{ImagingElectrode, DepositionElectrode}
+import com.misiunas.np.hardware.adc.control.DAC.{DepositionElectrode, ImagingElectrode}
 import com.typesafe.config.ConfigFactory
 
 /**
@@ -30,25 +30,25 @@ class ManualController extends Initializable {
   @FXML private var approachSurfaceButton: Button = null
   @FXML private var findAndFollowSurfaceButton: Button = null
 
+  @FXML private var textCurrentProcess: Label = null
+
+  // # Left Column - properties
+
   @FXML private var approachDistanceField: TextField = null
   @FXML private var approachSpeedField: TextField = null
   @FXML private var conductivityCheckIntervalField: TextField = null
-  @FXML private var pulseSizeField: TextField = null
-  @FXML private var useACToggle: CheckBox = null
+  @FXML private var checkboxModeAC: CheckBox = null
+  @FXML private var fieldRetreatDistance: TextField = null
+  @FXML private var fieldScanSpacing: TextField = null
   @FXML private var depositionModeToggle: CheckBox = null
-  @FXML private var hStepField: TextField = null
 
-  @FXML private var genericField: TextField = null
 
   // # Actions
 
   @FXML protected def killProcessorAction(event: ActionEvent) = sendToActor( Processor.Kill )
 
   @FXML protected def approachSurfaceAction(event: ActionEvent) =
-    sendToActor( Approach(
-      target = approachDistanceField.getText.toDouble,
-      speed = approachSpeedField.getText.toDouble
-    ) )
+    sendToActor( Approach( target = approachDistanceField.getText.toDouble ) )
 
 
   @FXML protected def findAndFollowSurfaceAction(event: ActionEvent) =
@@ -58,18 +58,21 @@ class ManualController extends Initializable {
       baselineCheckInterval = conductivityCheckIntervalField.getText.toDouble
     ))
 
+
+  @FXML protected def actionGridScan(event: ActionEvent) =
+    sendToActor( GridScan( target = approachDistanceField.getText.toDouble ) )
+
   @FXML protected def setStandardDACSettingsAction(event: ActionEvent) =
     sendToActor( ImagingDACSettings() )
 
-  @FXML protected def depositPulseAction(event: ActionEvent) =
-    sendToActor(SimpleProcess.amplifier(amp => amp.pulse(getPulseSize())))
-
-  @FXML protected def stepAndPulseAction(event: ActionEvent) =
-    sendToActor(StepAndPulse(hStepField.getText.toDouble, getPulseSize()))
-
-
   @FXML protected def zeroCurrentAction(event: ActionEvent) =
     sendToActor(SimpleProcess.amplifier( amp => amp.zeroCurrent() ))
+
+  @FXML protected def depositPulseAction(event: ActionEvent) =
+    sendToActor(SimpleProcess.amplifier(amp => amp.pulse( ??? ))) // todo set pulse size
+
+  @FXML protected def toggleModeAC(event: ActionEvent) =
+    sendToActor(SimpleProcess.amplifier(amp => amp.trackModeAC(checkboxModeAC.isSelected) ))
 
   // ## Other Actions
 
@@ -87,8 +90,8 @@ class ManualController extends Initializable {
     Fields.onlyNumbers(approachDistanceField)
     Fields.onlyNumbers(approachSpeedField)
     Fields.onlyNumbers(conductivityCheckIntervalField)
-    Fields.onlyNumbers(pulseSizeField)
-    Fields.onlyNumbers(hStepField)
+    Fields.onlyNumbers(fieldRetreatDistance)
+    Fields.onlyNumbers(fieldScanSpacing)
 
 
     val conf = ConfigFactory.load
@@ -97,13 +100,13 @@ class ManualController extends Initializable {
     approachSpeedField.setText(""+ conf.getDouble("experiment.tipRadius")/4  )
     conductivityCheckIntervalField.setText(""+ 60  )
 
-    pulseSizeField.setText("100.0")
-    hStepField.setText("20.0")
+    fieldRetreatDistance.setText("4.0")
+    fieldScanSpacing.setText("0.200")
 
-    useACToggle.setSelected(false)
+//    checkboxModeAC.setSelected(false)
     depositionModeToggle.setSelected(true)
 
-    setProcessorStatus(false) // no process initially
+    setProcessorStatus("") // no process initially
   }
 
 
@@ -120,19 +123,18 @@ class ManualController extends Initializable {
     }
   }
 
-  def setProcessorStatus(active: Boolean): Unit = {
-    active match {
-      case true =>
-        progressIndicator.setOpacity(1.0)  // no progress indicator
-        killProcessorButton.setDisable(false) // no process
-      case false =>
+  def setProcessorStatus(process: String): Unit =
+    process match {
+      case "" =>
         progressIndicator.setOpacity(0.0)  // no progress indicator
         killProcessorButton.setDisable(true) // no process
+        textCurrentProcess.setText("No process running")
+      case _ =>
+        progressIndicator.setOpacity(1.0)  //  progress indicator
+        killProcessorButton.setDisable(false) //  process kill allowed
+        textCurrentProcess.setText(process)
     }
-  }
 
-  def getPulseSize(): Double =
-    if( pulseSizeField == null ) 0.0
-    else pulseSizeField.getText.toDouble
+
 
 }

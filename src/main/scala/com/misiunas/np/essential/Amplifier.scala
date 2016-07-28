@@ -1,12 +1,10 @@
 package com.misiunas.np.essential
 
 import akka.actor.ActorRef
-import com.misiunas.np.essential.implementations.{AmplifierState, AmplifierReaders, VoltageMode}
-import com.misiunas.np.hardware.adc.control.DAC
-import com.misiunas.np.hardware.adc.input.IV
-import com.misiunas.np.hardware.adc.input.IV.IVData
-import com.misiunas.np.tools.{Wait, Talkative}
-import org.joda.time.DateTime
+import com.misiunas.np.essential.implementations.{AmplifierState, VoltageMode}
+import com.misiunas.np.tools.Wait
+import org.joda.time.{DateTime, Duration, Interval}
+
 import scala.annotation.tailrec
 import scala.util.control.Breaks._
 
@@ -30,6 +28,42 @@ import scala.util.control.Breaks._
  */
 abstract class Amplifier (val dac: ActorRef, val iv: ActorRef) extends AmplifierState {
 
+  // # Temporary place for normalised position parameter measure
+
+  private var approachModeAC: Boolean = false
+  private var baseline: ACDC = null
+  private var baselineTimestamp: DateTime = DateTime.parse("1988-04-27T00:00") // just large time interval
+
+  private def normalisedCurrent(acdc: ACDC): Double =
+    if (approachModeAC){
+      acdc.ac / trackBaseline.ac
+    } else {
+      acdc.dc / trackBaseline.dc
+    }
+
+  def track = normalisedCurrent( this.get )
+
+  def trackList(i: Int): Vector[Double] = this.get(i).map(normalisedCurrent)
+
+  def trackModeAC(ac: Boolean): Unit = {approachModeAC = ac}
+
+  def trackBaseline: ACDC = baseline
+
+  def trackBaselineCurrent: Double = if(approachModeAC) baseline.ac else baseline.dc
+
+  def trackTimeSinceBaselineMeasured: Duration  = (new Interval(baselineTimestamp,DateTime.now())).toDuration
+
+  /** Measured the baseline (it will lock!)
+    * Dynamically load points until error is low enough  */
+  def trackMeasureBaseline(): Boolean = {
+//    import breeze.linalg._
+//    import breeze.numerics._
+//    import breeze.stats._
+    this.wait(10)
+    baseline = this.getMean(10)
+    baselineTimestamp = DateTime.now()
+    true
+  }
 
 
 }
@@ -42,5 +76,7 @@ object Amplifier {
     amp.update()
     amp
   }
+
+
 
 }

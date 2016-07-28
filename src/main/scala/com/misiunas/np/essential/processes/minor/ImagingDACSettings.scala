@@ -1,7 +1,7 @@
 package com.misiunas.np.essential.processes.minor
 
 import com.misiunas.np.essential.DeviceProcess
-import com.misiunas.np.essential.DeviceProcess.{Finished, ContinueQ}
+import com.misiunas.np.essential.DeviceProcess.{Finished, StepResponse}
 import com.misiunas.np.hardware.adc.control.DAC
 
 /**
@@ -10,7 +10,7 @@ import com.misiunas.np.hardware.adc.control.DAC
 class ImagingDACSettings extends DeviceProcess {
 
   /** method to be implemented to determine a process */
-  override def step(): ContinueQ = {
+  override def step(): StepResponse = {
     amplifier.dac ! DAC.SetMode(DAC.ImagingElectrode)
     amplifier.dac ! DAC.SetAC(false)
     amplifier.dac ! DAC.SetAC_V(100)

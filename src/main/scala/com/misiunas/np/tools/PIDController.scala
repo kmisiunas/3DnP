@@ -17,7 +17,7 @@ package com.misiunas.np.tools
  *
  * Created by kmisiunas on 15-09-14.
  */
-class PIDController(val kp: Double, val ki: Double, val kd: Double) {
+class PIDController(val kp: Double, val ki: Double, val kd: Double) extends Serializable {
 
   type StepSize = Double
 
@@ -34,6 +34,8 @@ class PIDController(val kp: Double, val ki: Double, val kd: Double) {
   }
 
   def reset() = {previousError=0.0; integral=0.0;}
+
+  override def toString: String = "PIDController(kp="+kp+",ki="+ki+",kd="+kd+")"
 }
 
 

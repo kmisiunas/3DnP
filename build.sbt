@@ -36,7 +36,15 @@ libraryDependencies += "com.typesafe" % "config" % "1.3.0"
 // much simpler!
 libraryDependencies += "org.scream3r" % "jssc" % "2.8.0"
 
+libraryDependencies += "org.scalanlp" %% "breeze" % "0.12"
 
+libraryDependencies += "org.scalanlp" %% "breeze-natives" % "0.12"
+
+resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
+
+libraryDependencies += "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.3"
+
+libraryDependencies += "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3"
 
 // local library
 libraryDependencies += "com.misiunas" % "geoscala_2.11" % "0.2.0"

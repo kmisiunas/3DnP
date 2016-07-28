@@ -1,7 +1,7 @@
 package com.misiunas.np.essential
 
 import akka.actor.ActorRef
-import com.misiunas.np.essential.DeviceProcess.ContinueQ
+import com.misiunas.np.essential.DeviceProcess.{ProcessResults, StepResponse, Success}
 import com.misiunas.np.hardware.stage.PiezoStage
 
 /**
@@ -15,28 +15,29 @@ import com.misiunas.np.hardware.stage.PiezoStage
  *
  * Created by kmisiunas on 15-09-04.
  */
-trait DeviceProcess {
+trait DeviceProcess extends Serializable {
 
   /** steps Must perform small actions where the process can be broke in between */
-  def step(): ContinueQ
+  def step(): StepResponse
 
-  def preStop(): Unit = {}
+  def finalise(): ProcessResults = Success
 
-  def init(): Unit = {}
+  def initialise(): Unit = {}
 
-  private var xyzRaw: ActorRef = null
   private var amplifierRaw: Amplifier = null
+  private var probeRaw: ProbePosition = null
 
-  protected def xyz: ActorRef =
-    if(xyzRaw != null) xyzRaw else throw new Exception("Process not initialised correctly: xyz missing")
+  protected def xyz: ActorRef = probe.xyz // todo: phase out
+  protected def probe: ProbePosition =
+    if(probeRaw != null) probeRaw else throw new Exception("Process not initialised correctly: probe missing")
   protected def amplifier: Amplifier =
     if(amplifierRaw != null) amplifierRaw else throw new Exception("Process not initialised correctly: amplifier missing")
 
   /** method for running the process */
-  final def start(xyz: ActorRef, amplifier: Amplifier): Unit = {
-    this.xyzRaw = xyz
+  final def start(probe: ProbePosition, amplifier: Amplifier): Unit = {
+    this.probeRaw = probe
     this.amplifierRaw = amplifier
-    init()
+    initialise()
   }
 
 }
@@ -44,8 +45,14 @@ trait DeviceProcess {
 object DeviceProcess{
 
   /** way of coordinating steps */
-  abstract class ContinueQ()
-  case object Continue extends ContinueQ
-  case object Finished extends ContinueQ
+  trait StepResponse
+  case object Continue extends StepResponse
+  case object Finished extends StepResponse
+  case class InjectProcess(process: DeviceProcess) extends StepResponse
+  case class Panic(msg: String) extends StepResponse  // kill all subsequent tasks and notify the user
+
+
+  trait ProcessResults
+  case object Success extends ProcessResults
 
 }

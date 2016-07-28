@@ -3,7 +3,7 @@ package com.misiunas.np.essential.processes
 import breeze.linalg.*
 import com.misiunas.geoscala.vectors.Vec
 import com.misiunas.np.essential.DeviceProcess
-import com.misiunas.np.essential.DeviceProcess.{Continue, ContinueQ}
+import com.misiunas.np.essential.DeviceProcess.{Continue, StepResponse}
 import com.misiunas.np.hardware.stage.PiezoStage
 import com.misiunas.np.tools.{PIDController, Talkative}
 import com.typesafe.config.ConfigFactory
@@ -37,7 +37,7 @@ class KeepDistance (distanceFraction: Double,
   /** method for keeping close to the surface
     * derivative action is sensitive to measurement noise, so avoid it
     */
-  def step(): ContinueQ = {
+  def step(): StepResponse = {
     amplifier.updateTillNew()
     // if the current is more than 95% of baseline go to approach method
     if (normalise( amplifier.get.dc ) > 0.95 ){
@@ -64,7 +64,7 @@ class KeepDistance (distanceFraction: Double,
   // # Implementation Methods
 
   /** prepare  */
-  override def init() = {
+  override def initialise() = {
     baseline = readBaseline()
     lastBaselineCheck = System.currentTimeMillis()
   }

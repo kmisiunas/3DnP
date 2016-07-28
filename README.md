@@ -6,7 +6,7 @@
  - [ ] Logging + GUI activation 
 
  
-## ToDo Longterm
+## ToDo Long term
  
  - [X] TCP DAC communication
  - [X] JAVAFX GUI
@@ -33,4 +33,7 @@ To view logs go to `log/3DnP-akka.log` and enter this command
 
     tail -F log/3DnP-akka.log
     tail -F log/3DnP-akka.log | less -S
-    tail -F log/3DnP-akka.log | grep WARN  
+    tail -F log/3DnP-akka.log | grep WARN
+
+## Architecture 
+

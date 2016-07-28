@@ -5,16 +5,17 @@ import javafx.fxml.FXMLLoader
 import javafx.scene.Scene
 import javafx.scene.control.ScrollPane
 import javafx.scene.image.Image
-import javafx.scene.layout.{VBox, Pane}
+import javafx.scene.layout.{Pane, VBox}
 import javafx.stage.Stage
 
-import akka.actor.{ActorSystem, ActorLogging}
+import akka.actor.{ActorLogging, ActorSystem}
 import akka.event.Logging
 import com.misiunas.np.essential.Processor
-import com.misiunas.np.gui.manual.{ManualView, ManualController}
-import com.misiunas.np.gui.xyz.{XYZView, XYZController}
+import com.misiunas.np.gui.manual.{ManualController, ManualView}
+import com.misiunas.np.gui.xyz.{ApproachController, ApproachView, XYZController, XYZView}
 import com.misiunas.np.hardware.adc.control.DAC
 import com.misiunas.np.hardware.adc.input.IV
+import com.misiunas.np.hardware.approach.ApproachStage
 import com.misiunas.np.hardware.logging.MotionLogger
 import com.misiunas.np.hardware.stage.PiezoStage
 
@@ -29,10 +30,11 @@ class ApplicationFX extends Application {
 
   val system: ActorSystem = ActorSystem("3DnP")
   val xyz = system.actorOf(PiezoStage.props(), "piezo")
+  val approach = system.actorOf(ApproachStage.props(), "approach")
   val iv = system.actorOf(IV.props(), "iv")
   val control = system.actorOf(DAC.props(), "dac")
   val motionLogger = system.actorOf(MotionLogger.props(iv, xyz), "logger.motion")
-  val processor = system.actorOf(Processor.props(xyz,iv,control), "processor")
+  val processor = system.actorOf(Processor.props(xyz,approach,iv,control), "processor")
 
 
   override def start(primaryStage: Stage) = {
@@ -45,8 +47,15 @@ class ApplicationFX extends Application {
     val scrollPane: ScrollPane = new ScrollPane()
     val content: VBox = new VBox()
     scrollPane.setContent(content)
-    scrollPane.setPrefSize(720, 800)
+    scrollPane.setPrefSize(600, 650)
+    // add approach stage
+    loader.setLocation(getClass.getResource("/com/misiunas/np/gui/xyz/approach_layout.fxml"))
+    val approachPane: Pane = loader.load.asInstanceOf[Pane]
+    val approachController = loader.getController[ApproachController]
+    content.getChildren().add(approachPane)
+    val aproachView = system.actorOf(ApproachView.props( approach , approachController), "gui.approach")
     // add Piezo controls
+    loader = new FXMLLoader()
     loader.setLocation(getClass.getResource("/com/misiunas/np/gui/xyz/xyz_layout.fxml"))
     val xyzPane: Pane = loader.load.asInstanceOf[Pane]
     val xyzController = loader.getController[XYZController]
