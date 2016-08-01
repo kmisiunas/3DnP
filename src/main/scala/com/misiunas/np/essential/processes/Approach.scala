@@ -88,12 +88,16 @@ class Approach private( val target: Double, // expressed in percent,
         Vec(0,0, ConfigFactory.load.getDouble("approach.approachStageRecovery")) )
       Continue
 
-    case p: Double if p.abs > 1 =>
+    case _ if amplifier.track > 0.96 => // just go
+      probe.moveBy( Vec(0,0, speed) )
+      Continue
+
+    case p: Double if p.abs > speed =>
       probe.moveBy( Vec(0,0, p.signum*speed) )
       Continue
 
     case p: Double =>
-      probe.moveBy( Vec(0,0, p*speed) )
+      probe.moveBy( Vec(0,0, p) )
       Continue
 
     case unknown => Panic("Message nut expected"+unknown)

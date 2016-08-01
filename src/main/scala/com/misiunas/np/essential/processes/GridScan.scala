@@ -37,7 +37,7 @@ class GridScan (val target: Double) extends DeviceProcess {
 
   override def toString: String = "GridScan("+grid.length+"/"+totalSteps+")"
 
-  var file: Output = Resource.fromFile("GridScan on "+DateTime.now().toString()+".csv")
+  var file: Output = null
 
   override def initialise(): Unit = {
     grid = {
@@ -53,13 +53,15 @@ class GridScan (val target: Double) extends DeviceProcess {
       linear.map( _ + start).toList
     }
     totalSteps = grid.length
+    file = Resource.fromFile("GridScan on "+DateTime.now().toString()+".csv")
+
   }
 
 
   private var status: String = "init"
 
   override def step(): StepResponse = status match {
-    case "inti" =>
+    case "init" =>
       status = "read"
       InjectProcess( Approach.manual(target, true, 10) )
     case "read" =>
@@ -79,6 +81,8 @@ class GridScan (val target: Double) extends DeviceProcess {
       probe.moveBy( Vec(0,0,-safetyDz) )
       probe.move( probe.pos.copy(x = grid.head.x, y = grid.head.y) )
       InjectProcess( Approach.manual(target, true, 10) )
+
+    case _ => Panic("Command not found")
   }
 
   override def finalise(): ProcessResults = {
@@ -91,3 +95,4 @@ class GridScan (val target: Double) extends DeviceProcess {
 object GridScan {
   def apply(target: Double): GridScan = new GridScan(target)
 }
+
