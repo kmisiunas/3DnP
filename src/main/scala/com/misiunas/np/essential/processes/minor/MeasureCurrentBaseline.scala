@@ -20,7 +20,7 @@ class MeasureCurrentBaseline (fullRecovery: Boolean) extends DeviceProcess {
   val recover = if(fullRecovery) retreat else
     ConfigFactory.load.getDouble("approach.baselineMeasurement.recover")
 
-  override def initialise(): Unit = {status = "retreat"}
+  override def onStart(): Unit = {status = "retreat"}
 
   override def toString: String = "MeasureCurrentBaseline(status="+status+")"
 

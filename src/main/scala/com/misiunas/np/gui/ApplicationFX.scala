@@ -47,7 +47,7 @@ class ApplicationFX extends Application {
     val scrollPane: ScrollPane = new ScrollPane()
     val content: VBox = new VBox()
     scrollPane.setContent(content)
-    scrollPane.setPrefSize(600, 650)
+    scrollPane.setPrefSize(610, 800)
     // add approach stage
     loader.setLocation(getClass.getResource("/com/misiunas/np/gui/xyz/approach_layout.fxml"))
     val approachPane: Pane = loader.load.asInstanceOf[Pane]

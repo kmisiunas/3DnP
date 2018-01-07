@@ -3,6 +3,7 @@ package com.misiunas.np.essential
 import akka.actor.Actor.Receive
 import akka.actor._
 import com.misiunas.np.essential.DeviceProcess._
+import com.misiunas.np.essential.Processor.ProcessorDoNow
 
 /**
   * # Creates queue for items to execute
@@ -31,65 +32,101 @@ class Processor ( val xyz: ActorRef,
   case class Job(val process: DeviceProcess, sender: ActorRef, started: Boolean)
 
   var jobQueue: List[Job] = Nil
+  var pause: Boolean = true
   var killFlag: Boolean = false
 
   // # Internal Controls
 
-  case class StartJob(job: Job)
-  case class DoStep(job: Job)
+  case object StartNextJob
+  case object DoStep
   case class FinishJob(job: Job)
 
 
 
   override def receive: Receive = {
-
-    case newJob: DeviceProcess =>
-      if(jobQueue.isEmpty) self ! StartJob( Job(newJob, sender, false) )
-      else  jobQueue  = jobQueue :+ Job(newJob, sender, false)
-
-    case StartJob(job) =>
-      job.sender ! Processor.Status(job.process.toString)
+    case StartNextJob =>
+      val job = jobQueue.head
       log.debug("Started new Process: "+job.process+", from: "+job.sender)
-      if (!job.started) job.process.start(probe, amplifier)
-      self ! DoStep( Job(job.process, job.sender, started = true) )
+      if (!job.started) {
+        job.process.start(probe, amplifier)
+        jobQueue = Job(job.process, job.sender, started = true) +: jobQueue.tail
+      }
+      job.process.onResume()
+      self ! DoStep
 
-    case DoStep(job) =>
+    case DoStep =>
+      val job = jobQueue.head
       if(killFlag) {
         self ! FinishJob(job)
-        killFlag = false
+      } else if (pause){
+        job.process.onPause()
       }
-      else job.process.step() match {
-        case Continue =>
-          self ! DoStep(job)
-          job.sender ! Processor.Status(job.process.toString) // todo might be too many updates
-        case Finished => self ! FinishJob(job)
-        case InjectProcess(process) =>
-          jobQueue = job +: jobQueue
-          self ! StartJob( Job(process, job.sender, false) )
-        case Panic(msg) =>
-          self ! FinishJob(job)
-          log.warning("Process "+job.process+"panicked: "+msg)
-          jobQueue = Nil
-          job.sender ! Processor.Status("")
+      else {
+        try {
+          job.process.step() match {
+            case Continue =>
+              self ! DoStep
+            case Finished => self ! FinishJob(job)
+            case InjectProcess(process) =>
+              jobQueue = Job(process, job.sender, false) +: jobQueue
+              job.process.onPause()
+              self ! StartNextJob
+            case Panic(msg) =>
+              self ! FinishJob(job)
+              jobQueue = Nil
+              log.warning("Process "+job.process+" panicked: "+msg)
+          }
+        } catch {
+          case e: PositionTimeoutException => //non lethal exception - could not move
+            log.warning("Process "+job.process+" threw non-crytical exception: "+e)
+            job.process.onPause()
+            self ! StartNextJob
+
+          case e: Exception =>
+            self ! FinishJob(job)
+            jobQueue = Nil
+            log.warning("Process "+job.process+" threw unknown exception: "+e)
+        }
       }
 
     case FinishJob(job) =>
-      job.process.finalise() match {
+      job.process.onPause()
+      job.process.onStop() match {
         case DeviceProcess.Success =>
           log.debug("Process finished: "+job.process)
-          job.sender ! Processor.Status("")
-          if(jobQueue.nonEmpty) {
-            self ! StartJob( jobQueue.head )
-            jobQueue = jobQueue.tail
-          }
+          if (jobQueue.contains(job)) jobQueue = jobQueue.filterNot(_ == job) // remove
+          if (jobQueue.nonEmpty) self ! StartNextJob // autostart next
+          else pause = true // otherwise stop all
       }
 
-    case Processor.Kill =>
+    // External controls
+
+    case ProcessorDoNow(process) =>
+      // todo not great implementation
+      jobQueue = List( Job(process, sender, false) )
+      self ! Processor.Start
+
+    case newJob: DeviceProcess =>
+      jobQueue  = jobQueue :+ Job(newJob, sender, false)
+
+    case Processor.Start =>
+      killFlag = false; pause = false
+      self ! StartNextJob
+
+    case Processor.Pause =>
+      pause = true
+
+    case Processor.Stop =>
+      killFlag = true; pause = true
       log.info("Processes kill order issued by: "+sender())
       jobQueue = Nil
-      killFlag = true
 
-    case _ => log.warning("Message not understood.")
+    case Processor.StatusQ =>
+      val list: List[String] =
+        jobQueue.map(job => job.process.toString + (if(job.started) "  (started)" else "") )
+      sender ! Processor.Status(list, !pause)
+
+    case other => log.error("Message not understood: "+other)
   }
 
 
@@ -101,10 +138,19 @@ object Processor {
   def props(xyz: ActorRef, approach: ActorRef, iv: ActorRef, dac: ActorRef ): Props =
     Props( new Processor(xyz, approach, iv, dac) )
 
+  trait Command
+
   /** Method for suddenly stopping the DeviceProcess that was running */
-  case object Kill
+  case object Stop extends Command
+  case object Pause extends Command
+  case object Start extends Command
+  case object Kill extends Command // todo
+
+  case class ProcessorDoNow(pr: DeviceProcess)
 
   /** status of the processor */
-  case class Status(working: String)
+  case class Status(queue: List[String], running: Boolean)
+
+  case object StatusQ
 
 }

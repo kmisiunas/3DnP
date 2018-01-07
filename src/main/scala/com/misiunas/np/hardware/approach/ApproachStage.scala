@@ -128,8 +128,11 @@ class ApproachStage extends Actor with ActorLogging {
     // make sure everything was received
     Wait.stupid(100)
     updater ! "wakeup"
+
     Wait.stupid(500)
     mover ! "wakeup"
+
+    r = status.pos
     import collection.JavaConversions._
     //val initPos = Vec( ConfigFactory.load.getDoubleList("piezo.initialPosition").toList.map(d => d.toDouble) )
     //mover ! Move(initPos)

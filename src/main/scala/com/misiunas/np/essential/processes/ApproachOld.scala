@@ -62,7 +62,7 @@ class ApproachOld private(val baselineFn: Amplifier => ACDC,
   lazy val baseline: Baseline = new Baseline()
 
 
-  override def initialise() = {
+  override def onStart() = {
     ConfigFactory.load.getBoolean("approach.baselineMeasurement")
     ConfigFactory.load.getDouble("approach.baselineMeasurementInterval")
     baseline // compute baseline for the first time
@@ -92,7 +92,7 @@ class ApproachOld private(val baselineFn: Amplifier => ACDC,
         Continue
       case p if p == 1.0 =>
         // there but test if everything ok
-        amplifier.wait(10)
+        amplifier.await(10)
         val meanX = amplifier.getMean(10)
         if( alarmTrigger(meanX) < 0.95 )  // still not there
           Continue
@@ -156,7 +156,7 @@ object ApproachOld {
   /** safe and automatic method */
   def auto(): ApproachOld = {
     val R = ConfigFactory.load.getDouble("experiment.tipRadius")
-    val fn: Amplifier => ACDC = a => {a.wait(10); a.getMean(10)}
+    val fn: Amplifier => ACDC = a => {a.await(10); a.getMean(10)}
     new ApproachOld(
       baselineFn = fn,
       target = 0.85,
@@ -166,7 +166,7 @@ object ApproachOld {
   }
 
   def apply(target: Double, speed: Double): ApproachOld = {
-    val fn: Amplifier => ACDC = a => {a.wait(10); a.getMean(10)}
+    val fn: Amplifier => ACDC = a => {a.await(10); a.getMean(10)}
     new ApproachOld(fn, target, speed )
   }
 

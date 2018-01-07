@@ -64,7 +64,7 @@ abstract class AmplifierReaders extends AmplifierBase {
   def cycle: Int = data.cycle
 
   /** locks the operations until 'cycles' number of new readings have been received */
-  def wait(cycles: Int): Unit = {
+  def await(cycles: Int): Unit = {
     val start = cycle
     val startT = System.currentTimeMillis()
     while( start + cycles >= cycle){ // hack of a method

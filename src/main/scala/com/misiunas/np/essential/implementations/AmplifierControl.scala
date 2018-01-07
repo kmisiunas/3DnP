@@ -9,6 +9,13 @@ import com.misiunas.np.tools.Talkative
  */
 abstract class AmplifierControl extends AmplifierReaders {
 
-  def pulse(magnitude: Double):Unit = dac ! DAC.Pulse(magnitude)
+  def pulse(magnitude: Double): Unit = {
+    dac ! DAC.Pulse(magnitude)
+    this.await(1)
+  }
+
+  def setPulseVoltage(v: Double): Unit = dac ! DAC.SetPulse_V(v)
+
+
 
 }

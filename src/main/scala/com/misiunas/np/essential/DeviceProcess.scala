@@ -9,7 +9,8 @@ import com.misiunas.np.hardware.stage.PiezoStage
  *
  * ToDo: implement such that other processes could be easily executed from main one
  *
- * Mostly boiler code
+ * Uses Android styled lifecycle:
+ * http://stackoverflow.com/questions/8515936/android-activity-life-cycle-what-are-all-these-methods-for
  *
  * Object implementation
  *
@@ -20,9 +21,18 @@ trait DeviceProcess extends Serializable {
   /** steps Must perform small actions where the process can be broke in between */
   def step(): StepResponse
 
-  def finalise(): ProcessResults = Success
+  // lifecycle management
 
-  def initialise(): Unit = {}
+  def onCreate(): Unit = {}
+  def onStart(): Unit = {}
+  def onResume(): Unit = {}
+
+  def onPause(): Unit = {}
+  def onStop(): ProcessResults = Success
+
+  def onRestart(): Unit = {}
+
+  // boiled code
 
   private var amplifierRaw: Amplifier = null
   private var probeRaw: ProbePosition = null
@@ -37,8 +47,10 @@ trait DeviceProcess extends Serializable {
   final def start(probe: ProbePosition, amplifier: Amplifier): Unit = {
     this.probeRaw = probe
     this.amplifierRaw = amplifier
-    initialise()
+    onStart()
   }
+
+  onCreate() // todo experimental: test if this is run in implementations
 
 }
 

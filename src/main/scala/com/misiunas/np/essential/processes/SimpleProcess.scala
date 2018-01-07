@@ -53,5 +53,11 @@ object SimpleProcess {
       (xyz, amplifier) => xyzFn(xyz.xyz)
     new SimpleProcess(f, "XYZ only")
   }
+
+  def probe(probeFn: ProbePosition => Unit): SimpleProcess = {
+    val f: (ProbePosition, Amplifier) => Unit =
+      (xyz, amplifier) => probeFn(xyz)
+    new SimpleProcess(f, "Probe Motion")
+  }
   
 }

@@ -30,7 +30,7 @@ abstract class Amplifier (val dac: ActorRef, val iv: ActorRef) extends Amplifier
 
   // # Temporary place for normalised position parameter measure
 
-  private var approachModeAC: Boolean = false
+  private var approachModeAC: Boolean = true
   private var baseline: ACDC = null
   private var baselineTimestamp: DateTime = DateTime.parse("1988-04-27T00:00") // just large time interval
 
@@ -59,7 +59,7 @@ abstract class Amplifier (val dac: ActorRef, val iv: ActorRef) extends Amplifier
 //    import breeze.linalg._
 //    import breeze.numerics._
 //    import breeze.stats._
-    this.wait(10)
+    this.await(10)
     baseline = this.getMean(10)
     baselineTimestamp = DateTime.now()
     true

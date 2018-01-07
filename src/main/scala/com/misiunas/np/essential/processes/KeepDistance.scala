@@ -64,7 +64,7 @@ class KeepDistance (distanceFraction: Double,
   // # Implementation Methods
 
   /** prepare  */
-  override def initialise() = {
+  override def onStart() = {
     baseline = readBaseline()
     lastBaselineCheck = System.currentTimeMillis()
   }
@@ -86,7 +86,7 @@ class KeepDistance (distanceFraction: Double,
   // # Helper methods
 
   def readBaseline(n: Int = 10): Double = {
-    amplifier.wait(n)
+    amplifier.await(n)
     val mean = amplifier.getMean(n)
     mean.dc
   }

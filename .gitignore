@@ -1,6 +1,11 @@
 *.class
 *.log
 
+.DS_Store
+*.DS_Store
+
+*.csv
+
 # sbt specific
 dist/*
 target/

@@ -71,6 +71,10 @@ class DAC extends Actor with ActorLogging{
       }
     case StatusQ =>
       sender ! status
+    case cmd: DacCommand =>
+      worker forward cmd // todo
+    case other =>
+      log.error("DAC did not understand the message: "+ other)
 
   }
 
@@ -87,17 +91,23 @@ object DAC {
 
   // communication methods
 
+  trait DacCommand
+
   case object StatusQ
 
-  case class SetStatus(settings: DACStatus)
-  case class SetDC_V(dc_v: Double)
-  case class SetAC_V(ac_v: Double)
-  case class SetAC(active: Boolean)
-  case class SetFrequency(frequency: Double)
-  case class SetMode(electrode: ElectrodeMode)
-  case class Pulse(amount: Double)
+  case class SetStatus(settings: DACStatus) extends DacCommand
+  case class SetDC_V(dc_v: Double) extends DacCommand
+  case class SetAC_V(ac_v: Double) extends DacCommand
+  case class SetAC(active: Boolean) extends DacCommand
+  case class SetFrequency(frequency: Double) extends DacCommand
+  case class SetMode(electrode: ElectrodeMode) extends DacCommand
+  case class Pulse(amount: Double) extends DacCommand
+  case class SetPulse_V(voltage: Double) extends DacCommand
 
-  abstract class ElectrodeMode
+  case object Ping extends DacCommand
+  case class PingResponse(online: Boolean, time: Double)
+
+  abstract class ElectrodeMode extends DacCommand
 
   case object ImagingElectrode extends ElectrodeMode
   case object DepositionElectrode extends ElectrodeMode

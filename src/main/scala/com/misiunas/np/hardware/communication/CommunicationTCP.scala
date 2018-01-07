@@ -77,6 +77,7 @@ class CommunicationTCP(val socket: Socket, val maxReadWait: Int) extends Actor
       } catch {
         case e: Exception => log.error(e, "failed sending command: "+tell)
       }
+
     case SerialAsk(ask, lines) =>
       try {
         clearBuffer()  // just in case there were leftovers from somewhere

@@ -11,9 +11,8 @@ import com.misiunas.np.hardware.stage.PiezoStage
 import com.misiunas.np.hardware.stage.PiezoStage.{MoveBy, PositionQ}
 import com.misiunas.np.tools.{PIDController, Talkative}
 import com.typesafe.config.ConfigFactory
-
-
 import breeze.stats._
+import org.joda.time.DateTime
 
 /**
   * # Coordinates capillary approach to the surface
@@ -27,8 +26,8 @@ import breeze.stats._
   * Created by kmisiunas on 15-09-04.
   */
 class Approach private( val target: Double, // expressed in percent,
-                        val premeasureBaseline: Boolean,
-                        val stepsToConfirm: Int
+                        val stepsToConfirm: Int,
+                        val speed: Double
                          ) extends DeviceProcess {
 
   val log = org.slf4j.LoggerFactory.getLogger(getClass.getName)
@@ -36,14 +35,15 @@ class Approach private( val target: Double, // expressed in percent,
   val toRemeasureBaseline = ConfigFactory.load.getBoolean("approach.baselineMeasurement.remeasure")
   val remeasureInterval = ConfigFactory.load.getDouble("approach.baselineMeasurement.interval")
 
-  val speed: Double = ConfigFactory.load.getDouble("approach.speed")
-
   private var steps = 0
   private var pid: PIDController = null
 
-  override def toString: String = "Approach(steps="+steps+")"
+  private var lastReport = (0.0, DateTime.now())
 
-  override def initialise() = {
+
+  override def toString: String = "Approach(steps="+steps+", target="+target+")"
+
+  override def onStart() = {
     steps = 0
     log.info("Approach speed is: "+speed+" um/iteration")
     pid = PIDController(
@@ -52,13 +52,12 @@ class Approach private( val target: Double, // expressed in percent,
       kd = ConfigFactory.load.getDouble("approach.pid.kd")
     )
     log.info("Approach PID is: "+pid )
-    if (premeasureBaseline) amplifier.trackMeasureBaseline()
+    lastReport = (probe.posGlobal.z, DateTime.now())
   }
 
   /** function for approaching the sample */
   override def step(): StepResponse = {
-    if(steps % 100 == 0) log.info("Approaching surface: steps="+steps+" current track="+amplifier.track)
-    steps = steps + 1
+    reportProgress()
     amplifier.updateTillNew() // locks thread
     getCloser()
   }
@@ -88,16 +87,27 @@ class Approach private( val target: Double, // expressed in percent,
         Vec(0,0, ConfigFactory.load.getDouble("approach.approachStageRecovery")) )
       Continue
 
-    case _ if amplifier.track > 0.96 => // just go
+//    case _ if amplifier.track < target => // just go
+//      log.warn("Found surface by BRUTE approach. golbal Pos: " + probe.posGlobal )
+//      Finished
+
+    case _ if amplifier.track < 0.2 => // is DAC dead?
+      pid.reset()
+      log.error("Unexpected ADC value: "+amplifier.track)
+      probe.moveByGuranteed( Vec(0,0, -10.0) )
+      Finished
+
+    case _ if amplifier.track > 0.98 => // just go
+      pid.reset()
       probe.moveBy( Vec(0,0, speed) )
       Continue
 
     case p: Double if p.abs > speed =>
-      probe.moveBy( Vec(0,0, p.signum*speed) )
+      probe.moveBy( Vec(0,0, p.signum*speed*0.5) ) //todo
       Continue
 
     case p: Double =>
-      probe.moveBy( Vec(0,0, p) )
+      probe.moveBy( Vec(0,0, p) ) //todo
       Continue
 
     case unknown => Panic("Message nut expected"+unknown)
@@ -105,12 +115,21 @@ class Approach private( val target: Double, // expressed in percent,
   }
 
   def haveArrived: Boolean = {
-    val std: Double = stddev( amplifier.trackList(stepsToConfirm) )
+    val std: Double = 0.005 //stddev( amplifier.trackList(stepsToConfirm) )
     val m: Double = mean( amplifier.trackList(stepsToConfirm) )
     target - std < m && m < target + std
   }
 
-
+  /** report  the progress */
+  def reportProgress(): Unit = {
+    steps = steps + 1
+    if (steps % 100 == 0) {
+      val newReport = (probe.posGlobal.z, DateTime.now())
+      val speed: Double = (newReport._1 - lastReport._1) / (newReport._2.getMillis - lastReport._2.getMillis) * 1000
+      log.info("Approaching surface: steps="+steps+" track="+amplifier.track+ " speed="+speed.toFloat+"[um/s]")
+      lastReport = newReport
+    }
+  }
 
 
 
@@ -120,11 +139,18 @@ class Approach private( val target: Double, // expressed in percent,
 
 object Approach {
 
-  def apply(target: Double): Approach = { new Approach(target, true, 10 ) }
+  def apply(target: Double): Approach =
+    new Approach(
+      target,
+      1,
+      speed =  ConfigFactory.load.getDouble("approach.speed")
+    )
 
-  def manual(target: Double, premeasureBaseline: Boolean, stepsToConfirm: Int): Approach = {
-    new Approach(target, premeasureBaseline, stepsToConfirm )
+  def manualOld(target: Double, premeasureBaseline: Boolean, stepsToConfirm: Int): Approach = {
+    new Approach(target, stepsToConfirm , speed =  ConfigFactory.load.getDouble("approach.speed"))
   }
 
+  def manual(target: Double, stepsToConfirm: Int, speed: Double): Approach =
+    new Approach(target, stepsToConfirm, speed)
 
 }
