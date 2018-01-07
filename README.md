@@ -1,5 +1,10 @@
 # 3DnP
 
+Scanning ion-conductance microscopy control code in Scala/Akka.
+
+Warning: academic code: no support provided.  Use at your own risk. 
+
+
 ## ToDo
 
  - [X] TCP DAC communication
@@ -10,14 +15,8 @@
  - [ ] Hopping mode imaging
  - [X] Processor with ability to kill Process 
  
- ## Guidelines
- 
- ### GUI
- 
-  - Window width up to 700px
 
-
-### Logs
+## Logs
 
 To view logs go to `log/3DnP-akka.log` and enter this command
 
